@@ -1,0 +1,99 @@
+$background-color: rgb(200, 200, 200);
+$content-background-color: lighten($background-color, 10%);
+$content-width: 920px;
+$header-background-color: rgb(178, 25, 20);
+
+@mixin round-corners($radius: 5px) {
+  border-radius: $radius;
+}
+
+@mixin linear-gradient($from-color, $to-color) {
+  background: -webkit-linear-gradient(top, $from-color, $to-color);
+}
+
+@mixin button($background-color: rgb(20, 20, 20), 
+              $text-color: rgb(200, 200, 200),
+              $font-size: 15px) {
+  @include round-corners(15px);
+  @include linear-gradient(lighten($background-color, 20%), $background-color);
+
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.8),
+              0 0 5px rgba(0, 0, 0, 0.6) inset;
+              
+
+  color: $text-color;
+
+  text-decoration: none;
+  font-size: $font-size;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.2);
+
+  line-height: $font-size + 15px;
+  height: $font-size + 15px;
+  padding: 0 15px;
+
+  display: inline-block;
+
+  &:hover {
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.8),
+                0 0 3px rgba(0, 0, 0, 0.6) inset;
+  }
+}
+
+body {
+  background: $background-color;
+  margin: 0;
+  padding: 0;
+
+  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+  font-size: 13px;
+}
+
+#content {
+  @include round-corners(5px);
+
+  background: $content-background-color;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+
+  width: $content-width;
+  margin: 0 auto;
+
+  header {
+    background-image: url(/lightbulb.jpg);
+    padding: 0;
+
+    width: 143px;
+    height: 100px;
+    float: left;
+
+    border-bottom: solid 1px darken($header-background-color, 10%);
+
+    h1 { display: none }
+  }
+
+  > nav {
+    background: rgb(178, 25, 20);
+    float: left;
+    width: $content-width - 143px - 20px;
+    height: 40px;
+    padding-top: 60px;
+    padding-right: 20px;
+    text-align: right;
+    
+    border-bottom: solid 1px darken($header-background-color, 10%);
+
+    .new-idea {
+      @include button(rgb(50, 80, 10), rgba(255, 255, 255, 0.6), 20px);
+    }
+  }
+
+  > ol {
+    clear: both;
+
+    nav a {
+      @include button($font-size: 12px);
+    }
+  }
+}
+
+
