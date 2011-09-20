@@ -11,32 +11,35 @@ $header-background-color: rgb(178, 25, 20);
   background: -webkit-linear-gradient(top, $from-color, $to-color);
 }
 
-@mixin button($background-color: rgb(20, 20, 20), 
-              $text-color: rgb(200, 200, 200),
-              $font-size: 15px) {
+@mixin button($background-color: rgb(20, 20, 20), $height: 30px) {
   @include round-corners(15px);
   @include linear-gradient(lighten($background-color, 20%), $background-color);
 
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.8),
               0 0 5px rgba(0, 0, 0, 0.6) inset;
-              
 
-  color: $text-color;
+  color: rgba(255, 255, 255, 0.9);
+  border: none;
 
   text-decoration: none;
-  font-size: $font-size;
-  text-shadow: 0 0 2px rgba(255, 255, 255, 0.2);
+  font-size: $height / 2;
+  text-shadow: 0 -1px 1px rgba(0, 0, 0, 0.8);
 
-  line-height: $font-size + 15px;
-  height: $font-size + 15px;
-  padding: 0 15px;
+  line-height: $height;
+  height: $height;
+  padding: 0 $height / 2;
 
   display: inline-block;
 
   &:hover {
     text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.8),
-                0 0 3px rgba(0, 0, 0, 0.6) inset;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.8), 0 0 3px rgba(0, 0, 0, 0.6) inset;
+  }
+
+  &:active {
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.8), 0 0 3px rgba(0, 0, 0, 0.6) inset;
+    position: relative;
+    top: 1px;
   }
 }
 
@@ -59,39 +62,111 @@ body {
   margin: 0 auto;
 
   header {
-    background-image: url(/lightbulb.jpg);
-    padding: 0;
-
-    width: 143px;
-    height: 100px;
-    float: left;
-
-    border-bottom: solid 1px darken($header-background-color, 10%);
-
-    h1 { display: none }
-  }
-
-  > nav {
     background: rgb(178, 25, 20);
-    float: left;
-    width: $content-width - 143px - 20px;
-    height: 40px;
-    padding-top: 60px;
-    padding-right: 20px;
-    text-align: right;
-    
-    border-bottom: solid 1px darken($header-background-color, 10%);
+    padding: 0;
+    width: 100%;
+    height: 100px;
 
-    .new-idea {
-      @include button(rgb(50, 80, 10), rgba(255, 255, 255, 0.6), 20px);
+    h1 { 
+      background-image: url(/lightbulb.jpg);
+      padding: 0;
+      margin: 0;
+      width: 143px;
+      height: 100px;
+      float: left;
+      text-indent: 150px;
+      overflow: hidden;
+    }
+
+    > nav {
+      float: left;
+      width: $content-width - 143px;
+      height: 100%;
+      position: relative;
+
+      #new-idea, #search {
+        vertical-align: middle;
+        margin: 60px 0 0 10px;
+      }
+
+      #new-idea {
+        @include button(rgb(40, 40, 40), 30px);
+      }
+
+      #search {
+        @include round-corners;
+          
+        background-image: url(/search.png);
+        background-repeat: no-repeat;
+        background-position: 4px center;
+        background-color: rgba(255, 255, 255, 0.8);
+        border: none;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+
+        color: black;
+        
+        display: inline-block;
+        height: 25px;
+        width: 200px;
+        line-height: 25px;
+        font-size: 15px;
+        padding-left: 28px;
+      }
+
+      #trash {
+        @include round-corners;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+
+        background-color: rgba(0, 0, 0, 0.4);
+        background-image: url(/trash.png); 
+        background-repeat: no-repeat;
+        background-position: center center;
+
+        display: inline-block;
+        width: 60px;
+        height: 60px;
+
+        text-indent: 100px;
+        overflow: hidden;
+
+        position: absolute;
+        right: 10px;
+        top: 30px;
+
+        &.active {
+          box-shadow: 0 0 5px rgba(0, 0, 0, 0.5), 0 0 15px rgb(255, 255, 255);
+        }
+      }
     }
   }
 
-  > ol {
+  > ol#ideas {
     clear: both;
+    list-style-type: none;
+    padding: 10px 20px;
+    margin: 0;
 
-    nav a {
-      @include button($font-size: 12px);
+    li {
+      @include round-corners(3px);
+      background: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      
+      margin: 10px;
+      padding: 2px;
+      position: relative;
+
+      cursor: move;
+
+      .text {
+        padding: 0;
+        margin: 0 10px 0 20px;
+        min-height: 60px;
+        cursor: text;
+      }
+    }
+
+    li.ui-draggable-dragging {
+      opacity: 0.5;
     }
   }
 }

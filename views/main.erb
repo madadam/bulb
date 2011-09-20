@@ -4,6 +4,9 @@
     <link rel="stylesheet" href="/styles.css">
 
     <script src="/jquery.js"></script>
+    <script src="/jquery.jeditable.min.js"></script>
+    <script src="/jquery.scrollto.min.js"></script>
+    <script src="/jquery-ui-custom.min.js"></script>
     <script src="/app.js"></script>
 
     <title>iGotIdea</title>
@@ -13,41 +16,19 @@
     <div id="content">
       <header>
         <h1>iGotIdea</h1>
+
+        <nav>
+          <a id="new-idea" href="#">New idea</a>
+          <input id="search" type="text" title="Search">
+
+          <div id="trash" title="Drag an idea and drop it here to trash it.">trash</div>
+        </nav>
+
       </header>
 
-      <nav>
-        <a class="new-idea" href="/ideas/new" data-remote>New idea</a>
-      </nav>
-
-      <ol>
+      <ol id="ideas">
         <li id="idea-1">
-          <p>Nice style</p>
-
-          <nav>
-            <a href="/ideas/1/up" data-remote data-method="post">vote up</a>
-            <a href="/ideas/1/down" data-remote data-method="post">vote down</a>
-            <a href="/ideas/1" data-remote data-method="delete">delete</a>
-          </nav>
-        </li>
-
-        <li id="idea-2">
-          <p>Multiple users</p>
-
-          <nav>
-            <a href="/ideas/3/up" data-remote data-method="post">vote up</a>
-            <a href="/ideas/3/down" data-remote data-method="post">vote down</a>
-            <a href="/ideas/2" data-remote data-method="delete">delete</a>
-          </nav>
-        </li>
-
-        <li id="idea-3">
-          <p>Voting</p>
-
-          <nav>
-            <a href="/ideas/3/up" data-remote data-method="post">vote up</a>
-            <a href="/ideas/3/down" data-remote data-method="post">vote down</a>
-            <a href="/ideas/3" data-remote data-method="delete">delete</a>
-          </nav>
+          <div class="text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam blandit blandit tortor nec porttitor. Etiam et ipsum nisi, in semper tortor. Quisque id eleifend purus. Vestibulum eu ipsum eu enim dignissim tristique. Aliquam nunc dolor, placerat sit amet dignissim sed, volutpat quis urna. Morbi blandit vulputate lorem ut malesuada.</div>
         </li>
       </ol>
     </div>
