@@ -11,7 +11,8 @@ $header-background-color: rgb(178, 25, 20);
   background: -webkit-linear-gradient(top, $from-color, $to-color);
 }
 
-@mixin button($background-color: rgb(20, 20, 20), $height: 30px) {
+
+@mixin button-base($background-color: rgb(20, 20, 20), $height: 30px) {
   @include round-corners(15px);
   @include linear-gradient(lighten($background-color, 20%), $background-color);
 
@@ -30,16 +31,35 @@ $header-background-color: rgb(178, 25, 20);
   padding: 0 $height / 2;
 
   display: inline-block;
+}
 
-  &:hover {
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.8), 0 0 3px rgba(0, 0, 0, 0.6) inset;
-  }
+@mixin hovered-button($background-color, $height) {
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.8), 0 0 3px rgba(0, 0, 0, 0.6) inset;
+}
 
-  &:active {
-    box-shadow: 0 0 6px rgba(0, 0, 0, 0.8), 0 0 3px rgba(0, 0, 0, 0.6) inset;
-    position: relative;
-    top: 1px;
+@mixin pressed-button($background-color, $height) {
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.8), 0 0 3px rgba(0, 0, 0, 0.6) inset;
+  position: relative;
+  top: 1px;
+}
+
+@mixin button($background-color: rgb(20, 20, 20), $height: 30px) {
+  @include button-base($background-color, $height);
+  
+  &:hover  { @include hovered-button($background-color, $height); }
+  &:active { @include pressed-button($background-color, $height); }
+}
+
+@mixin enableable-button($background-color: rgb(20, 20, 20), $height: 30px) {
+  @include button-base($background-color, $height);
+  color: rgba(255, 255, 255, 0.2);
+
+  &.enabled {
+    color: rgba(255, 255, 255, 0.9);
+
+    &:hover  { @include hovered-button($background-color, $height); }
+    &:active { @include pressed-button($background-color, $height); }
   }
 }
 
@@ -90,7 +110,7 @@ body {
       }
 
       #new-idea {
-        @include button(rgb(40, 40, 40), 30px);
+        @include enableable-button(rgb(40, 40, 40), 30px);
       }
 
       #search {
@@ -163,10 +183,6 @@ body {
         min-height: 60px;
         cursor: text;
       }
-    }
-
-    li.ui-draggable-dragging {
-      opacity: 0.5;
     }
   }
 }

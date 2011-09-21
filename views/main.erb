@@ -5,7 +5,6 @@
 
     <script src="/jquery.js"></script>
     <script src="/jquery.jeditable.min.js"></script>
-    <script src="/jquery.scrollto.min.js"></script>
     <script src="/jquery-ui-custom.min.js"></script>
     <script src="/app.js"></script>
 
@@ -27,8 +26,14 @@
       </header>
 
       <ol id="ideas">
-        <li id="idea-1">
-          <div class="text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam blandit blandit tortor nec porttitor. Etiam et ipsum nisi, in semper tortor. Quisque id eleifend purus. Vestibulum eu ipsum eu enim dignissim tristique. Aliquam nunc dolor, placerat sit amet dignissim sed, volutpat quis urna. Morbi blandit vulputate lorem ut malesuada.</div>
+        <li id="idea-template" style="display:none">
+          <div class="vote">
+            <a class="up" data-method="post">up</a>
+            <span class="score"></span>
+            <a class="down" data-method="post">down</a>
+          </div>
+
+          <div class="text">Put your idea here.</div>
         </li>
       </ol>
     </div>
