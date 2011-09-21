@@ -1,34 +1,43 @@
+# gems
 require 'json'
 require 'sinatra'
 require 'sass'
+
+require 'idea'
+
+configure do
+  enable :raise_errors
+  disable :show_exceptions
+end
 
 get '/' do
   erb :main
 end
 
 get '/ideas' do
-  data = [
-    {:id => 1, :text => 'Add persistence'},
-    {:id => 2, :text => 'Fancier animations'},
-    {:id => 3, :text => 'Keyboard shortcuts'}
-  ]
+  ideas = Idea.all
 
   content_type :json
-  data.to_json
+  ideas.to_json
 end
 
 post '/ideas' do
+  idea = Idea.create(params[:value])
+
   content_type :json
-  {:id => rand(10000), :text => params[:value].to_s}
+  status 201
+  idea.to_json
 end
 
 put '/ideas/:id' do
+  idea = Idea.update(params[:id], params[:value])
+
   content_type :json
-  {:id => params[:id], :text => params[:value].to_s}
+  idea.to_json
 end
 
 delete '/ideas/:id' do
-
+  Idea.delete(params[:id])
 end
 
 get '/styles.css' do

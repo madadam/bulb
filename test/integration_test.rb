@@ -3,7 +3,7 @@ require 'capybara'
 require 'capybara-webkit'
 require 'capybara/dsl'
 
-require 'main'
+require 'app'
 
 class IntegrationTest < Test::Unit::TestCase
   include Capybara::DSL
@@ -17,6 +17,14 @@ class IntegrationTest < Test::Unit::TestCase
     visit '/'
     add_idea('test everything!')
     assert has_content?('test everything!')
+  end
+
+  def test_new_idea_survives_reloads
+    visit '/'
+    add_idea('test all the fucking time')
+
+    visit '/'
+    assert has_content?('test all the fucking time')
   end
 
   def test_edit_idea
