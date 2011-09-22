@@ -21,7 +21,7 @@ $header-background-color: rgb(178, 25, 20);
 @mixin inset-outset-box-shadow($x, $y, 
                                $inset-radius, $inset-color,
                                $outset-radius, $outset-color) {
-  box-shadow: inset $x $y $inset-radius $inset-color, $x $y $outset-radius, $outset-color;
+  box-shadow: inset $x $y $inset-radius $inset-color, $x $y $outset-radius $outset-color;
   -moz-box-shadow: inset $x $y $inset-radius $inset-color, $x $y $outset-radius $outset-color;
 }
 
