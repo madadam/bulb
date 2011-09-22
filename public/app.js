@@ -114,6 +114,19 @@
                   });
                 },
 
+    filter:     function(query) {
+                  this.list.find('li').not(this.template).each(function() {
+                    var idea = $(this);
+                    var text = idea.find('.text').text();
+
+                    if (text.toLowerCase().indexOf(query.toLowerCase()) > -1) {
+                      idea.show();
+                    } else {
+                      idea.hide();
+                    }
+                  })
+                },
+
     // privates
 
     _makeEditable:  function(idea) {
@@ -158,7 +171,8 @@
     _makeDraggable: function(idea) {
                       idea.draggable({
                         opacity:  0.5,
-                        revert:   "invalid"
+                        revert:   "invalid",
+                        scroll:   false
                       });
                     },
 
@@ -194,10 +208,24 @@
                 }
   }
 
+  // Search ---------------------------------------------------------------------------
+  var search = {
+    initialize: function() {
+                  var me = this;
+
+                  this.element = $("#search");
+                  this.element.keyup(function() {
+                    ideas.filter(me.element.val());
+                  });
+                },
+
+  }
+
   $(document).ready(function() {
+    ideas.initialize();
     indicator.initialize();
     newIdeaButton.initialize();
-    ideas.initialize();
+    search.initialize();
     trash.initialize();
 
     ideas.load();

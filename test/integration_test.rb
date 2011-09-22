@@ -71,6 +71,19 @@ class IntegrationTest < Test::Unit::TestCase
     assert has_no_content?('never ever test')
   end
 
+  def test_search
+    visit '/'
+    add_idea 'foo'
+    add_idea 'bar'
+    add_idea 'baz'
+
+    find('#search').set('ba')
+
+    assert has_css?('li', :text => 'bar')
+    assert has_css?('li', :text => 'baz')
+    assert has_no_css?('li', :text => 'foo')
+  end
+
   private
 
   def add_idea(text)
