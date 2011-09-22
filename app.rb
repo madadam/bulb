@@ -10,6 +10,16 @@ configure do
   disable :show_exceptions
 end
 
+helpers do
+  def vote(points)
+    idea = Idea.get(params[:id])
+    idea.vote!(points)
+
+    content_type :json
+    {:votes => idea.votes}.to_json
+  end
+end
+
 get '/' do
   erb :main
 end
@@ -40,6 +50,14 @@ delete '/ideas/:id' do
   Idea.delete(params[:id])
 
   status 200
+end
+
+post '/ideas/:id/up' do
+  vote(1)
+end
+
+post '/ideas/:id/down' do
+  vote(-1)
 end
 
 get '/styles.css' do

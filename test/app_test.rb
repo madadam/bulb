@@ -1,6 +1,5 @@
-require 'test/unit'
+require 'helper'
 require 'rack/test'
-require 'app'
 
 class AppTest < Test::Unit::TestCase
   include Rack::Test::Methods
@@ -14,12 +13,12 @@ class AppTest < Test::Unit::TestCase
     $redis.flushdb
   end
 
-  def test_get_root
+  test 'GET /' do
     get '/'
     assert_equal 200, last_response.status
   end
 
-  def test_get_ideas
+  test 'GET /ideas' do
     Idea.create('collect underpants')
     Idea.create('?')
     Idea.create('profit')
@@ -27,40 +26,71 @@ class AppTest < Test::Unit::TestCase
     get '/ideas'
     assert_equal 200, last_response.status
 
-    expected = [{'id' => 1, 'text' => 'collect underpants'},
-                {'id' => 2, 'text' => '?'},
-                {'id' => 3, 'text' => 'profit'}]
-    actual = JSON.parse(last_response.body)
-    assert_equal expected, actual
+    ideas = JSON.parse(last_response.body)
+    assert_equal 3, ideas.size
+
+    assert_equal 1, ideas[0]['id']
+    assert_equal 'collect underpants', ideas[0]['text']
+
+    assert_equal 2, ideas[1]['id']
+    assert_equal '?', ideas[1]['text']
+
+    assert_equal 3, ideas[2]['id']
+    assert_equal 'profit', ideas[2]['text']
   end
 
-  def test_post_ideas
+  test 'POST /ideas' do
     post '/ideas', :value => 'build spaceship'
     assert_equal 201, last_response.status
-    assert_equal %({"id":1,"text":"build spaceship"}), last_response.body
+
+    hash = JSON.parse(last_response.body)
+    assert_equal 1, hash['id']
+    assert_equal 'build spaceship', hash['text']
 
     idea = Idea.all.first
     assert_equal 1, idea.id
     assert_equal 'build spaceship', idea.text
   end
 
-  def test_put_idea
+  test 'PUT /ideas/:id' do
     idea = Idea.create('spawn zombies')
 
     put "/ideas/#{idea.id}", :value => 'spawn atomic zombies'
     assert_equal 200, last_response.status
-    assert_equal %({"id":#{idea.id},"text":"spawn atomic zombies"}), last_response.body
+
+    hash = JSON.parse(last_response.body)
+    assert_equal idea.id, hash['id']
+    assert_equal 'spawn atomic zombies', hash['text']
 
     idea = Idea.get(idea.id)
     assert_equal 'spawn atomic zombies', idea.text
   end
 
-  def test_delete_idea
+  test 'DELETE /ideas/:id' do
     idea = Idea.create('create black hole')
 
     delete "/ideas/#{idea.id}"
     assert_equal 200, last_response.status
 
     assert_nil Idea.get(idea.id)
+  end
+
+  test 'POST /ideas/:id/up' do
+    idea = Idea.create('foo')
+
+    post "/ideas/#{idea.id}/up"
+    assert_equal 200, last_response.status
+    assert_equal 'application/json', last_response.content_type
+    assert_equal 1, Idea.get(idea.id).votes
+  end
+
+  test 'POST /ideas/:id/down' do
+    idea = Idea.create('foo')
+    idea.vote!(3)
+
+    post "/ideas/#{idea.id}/down"
+    assert_equal 200, last_response.status
+    assert_equal 'application/json', last_response.content_type
+    assert_equal 2, Idea.get(idea.id).votes
   end
 end

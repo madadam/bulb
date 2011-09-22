@@ -1,8 +1,6 @@
-require 'test/unit'
+require 'helper'
 require 'capybara'
 require 'capybara/dsl'
-
-require 'app'
 
 class IntegrationTest < Test::Unit::TestCase
   include Capybara::DSL
@@ -15,13 +13,13 @@ class IntegrationTest < Test::Unit::TestCase
     $redis.flushdb
   end
 
-  def test_add_idea
+  test 'add idea' do
     visit '/'
     add_idea('test everything!')
     assert has_content?('test everything!')
   end
 
-  def test_new_idea_survives_reloads
+  test 'new idea survives reloads' do
     visit '/'
     add_idea('test all the fucking time')
 
@@ -29,7 +27,7 @@ class IntegrationTest < Test::Unit::TestCase
     assert has_content?('test all the fucking time')
   end
 
-  def test_edit_idea
+  test 'edit idea' do
     visit '/'
     add_idea('test little bit')
 
@@ -38,7 +36,7 @@ class IntegrationTest < Test::Unit::TestCase
     assert has_content?('test a lot')
   end
 
-  def test_edited_idea_is_preserved_after_reload
+  test 'edit is preserved after reload' do
     visit '/'
     add_idea('test little bit')
 
@@ -50,7 +48,7 @@ class IntegrationTest < Test::Unit::TestCase
     assert has_content?('test a lot')
   end
 
-  def test_trash_idea
+  test 'trash idea' do
     text = 'never test'
 
     visit '/'
@@ -60,7 +58,7 @@ class IntegrationTest < Test::Unit::TestCase
     assert has_no_content?('never test')
   end
 
-  def test_trashed_idea_is_gone_after_reload
+  test 'trashed idea is gone after reload' do
     visit '/'
     add_idea 'never ever test'
 
@@ -71,7 +69,7 @@ class IntegrationTest < Test::Unit::TestCase
     assert has_no_content?('never ever test')
   end
 
-  def test_search
+  test 'search' do
     visit '/'
     add_idea 'foo'
     add_idea 'bar'
@@ -82,6 +80,16 @@ class IntegrationTest < Test::Unit::TestCase
     assert has_css?('li', :text => 'bar')
     assert has_css?('li', :text => 'baz')
     assert has_no_css?('li', :text => 'foo')
+  end
+
+  test 'vote up' do
+    visit '/'
+    add_idea 'foo'
+    add_idea 'bar'
+    assert_ideas_order 'foo', 'bar'
+
+    vote_up_idea 'bar'
+    assert_ideas_order 'bar', 'foo'
   end
 
   private
@@ -101,5 +109,16 @@ class IntegrationTest < Test::Unit::TestCase
   def trash_idea(text)
     idea_node = find('#ideas li', :text => text)
     idea_node.drag_to(find('#trash'))
+  end
+
+  def vote_up_idea(text)
+    idea_node = find('#ideas li', :text => text)
+    idea_node.click_link 'up'
+  end
+
+  def assert_ideas_order(one, two)
+    texts = all('#ideas li .text').map { |node| node.text }
+    assert texts.index(one) < texts.index(two),
+           "expected ideas to be in order: 1: #{one}, 2: #{two}, but were not"
   end
 end

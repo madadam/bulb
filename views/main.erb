@@ -6,6 +6,7 @@
     <script src="/jquery.js"></script>
     <script src="/jquery.jeditable.min.js"></script>
     <script src="/jquery-ui-custom.min.js"></script>
+    <script src="/move.js"></script>
     <script src="/app.js"></script>
 
     <title>iGotIdea</title>
@@ -22,18 +23,16 @@
 
           <div id="trash" title="Drag an idea and drop it here to trash it.">trash</div>
         </nav>
-
       </header>
 
       <ol id="ideas">
         <li id="idea-template" style="display:none">
-          <!-- <div class="vote">
-            <a class="up" data-method="post">up</a>
-            <span class="score"></span>
-            <a class="down" data-method="post">down</a>
-          </div> -->
+          <a class="up" href="#">up</a>
+          <a class="down" href="#">down</a>
+          <span class="votes"></span>
 
           <div class="text">Put your idea here.</div>
+          <div class="handle"></div>
         </li>
       </ol>
 
