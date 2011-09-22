@@ -76,7 +76,8 @@
                 },
 
     trash:      function(idea, effect) {
-                  // TODO: actally trash the idea.
+                  $.ajax("/ideas/" + this.getId(idea), {type: "DELETE"});
+
                   var callback = function() { idea.remove(); };
 
                   if (effect == "fade") {
@@ -88,6 +89,16 @@
 
     isNew:      function(idea) {
                   return idea.attr("id") == undefined;
+                },
+
+    getId:      function(idea) {
+                  var id = idea.attr("id");
+
+                  if (id) {
+                    return id.slice("idea-".length);
+                  } else {
+                    return undefined;
+                  }
                 },
 
     load:       function() {
@@ -154,7 +165,21 @@
                 }
   }
 
+  // Indicator ------------------------------------------------------------------------
+  var indicator = {
+    initialize: function() {
+                  this.element = $("#indicator");
+                  this.element.ajaxStart(function() { $(this).show(); });
+                  this.element.ajaxStop(function()  { $(this).hide(); });
+
+                  this.element.ajaxError(function(event, request) {
+                    alert(request);
+                  });
+                }
+  }
+
   $(document).ready(function() {
+    indicator.initialize();
     newIdeaButton.initialize();
     ideas.initialize();
     trash.initialize();

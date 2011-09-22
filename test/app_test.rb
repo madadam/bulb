@@ -54,4 +54,13 @@ class AppTest < Test::Unit::TestCase
     idea = Idea.get(idea.id)
     assert_equal 'spawn atomic zombies', idea.text
   end
+
+  def test_delete_idea
+    idea = Idea.create('create black hole')
+
+    delete "/ideas/#{idea.id}"
+    assert_equal 200, last_response.status
+
+    assert_nil Idea.get(idea.id)
+  end
 end

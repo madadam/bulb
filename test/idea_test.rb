@@ -14,12 +14,19 @@ class IdeaTest < Test::Unit::TestCase
     assert_equal 'fly to mars', $redis.hget('ideas', '1')
   end
 
-  def test_update_updates_existing_idea
+  def test_update_updates_an_idea
     idea = Idea.create('fly to jupiter')
     Idea.update(idea.id, 'fly to uranus')
     idea = Idea.get(idea.id)
 
     assert_equal 'fly to uranus', idea.text
+  end
+
+  def test_delete_deletes_an_idea
+    idea = Idea.create('create artificial inteligence')
+    Idea.delete(idea.id)
+
+    assert_nil Idea.get(idea.id)
   end
 
   def test_get_retrieves_idea_by_id

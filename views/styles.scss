@@ -1,6 +1,6 @@
 $background-color: rgb(200, 200, 200);
 $content-background-color: lighten($background-color, 10%);
-$content-width: 920px;
+$content-width: 400px;
 $header-background-color: rgb(178, 25, 20);
 
 @mixin round-corners($radius: 5px) {
@@ -79,7 +79,8 @@ body {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 
   width: $content-width;
-  margin: 0 auto;
+  margin: 0 auto 40px auto;
+  position: relative;
 
   header {
     background: rgb(178, 25, 20);
@@ -106,11 +107,11 @@ body {
 
       #new-idea, #search {
         vertical-align: middle;
-        margin: 60px 0 0 10px;
+        margin: 70px 0 0 0;
       }
 
       #new-idea {
-        @include enableable-button(rgb(40, 40, 40), 30px);
+        @include enableable-button(rgb(40, 40, 40), 25px);
       }
 
       #search {
@@ -126,11 +127,12 @@ body {
         color: black;
         
         display: inline-block;
-        height: 25px;
-        width: 200px;
+        height: 20px;
+        width: 120px;
         line-height: 25px;
-        font-size: 15px;
+        font-size: 12px;
         padding-left: 28px;
+        margin-left: 10px;
       }
 
       #trash {
@@ -149,9 +151,9 @@ body {
         text-indent: 100px;
         overflow: hidden;
 
-        position: absolute;
+        position: fixed;
         right: 10px;
-        top: 30px;
+        bottom: 10px;
 
         &.active {
           box-shadow: 0 0 5px rgba(0, 0, 0, 0.5), 0 0 15px rgb(255, 255, 255);
@@ -163,7 +165,7 @@ body {
   > ol#ideas {
     clear: both;
     list-style-type: none;
-    padding: 10px 20px;
+    padding: 10px;
     margin: 0;
 
     li {
@@ -180,10 +182,19 @@ body {
       .text {
         padding: 0;
         margin: 0 10px 0 20px;
-        min-height: 60px;
+        min-height: 40px;
         cursor: text;
       }
     }
+  }
+
+  #indicator {
+    background: url(/indicator.gif);
+    position: absolute;
+    top: 4px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
   }
 }
 

@@ -11,6 +11,9 @@ class IntegrationTest < Test::Unit::TestCase
   def setup
     Capybara.current_driver = :webkit
     Capybara.app = Sinatra::Application
+
+    $redis.select 1
+    $redis.flushdb
   end
 
   def test_add_idea
@@ -44,6 +47,17 @@ class IntegrationTest < Test::Unit::TestCase
 
     trash_idea 'never test'
     assert has_no_content?('never test')
+  end
+
+  def test_trashed_idea_is_gone_after_reload
+    visit '/'
+    add_idea 'never ever test'
+
+    visit '/'
+    trash_idea 'never ever test'
+
+    visit '/'
+    assert has_no_content?('never ever test')
   end
 
   private

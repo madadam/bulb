@@ -28,7 +28,8 @@ class Idea
   end
 
   def self.delete(id)
-    # ...
+    $redis.hdel('ideas', id)
+    nil
   end
 
   def self.next_id
@@ -39,12 +40,12 @@ class Idea
     $redis.hset('ideas', id, text)
   end
 
-  def to_json(*args)
-    {:id => id, :text => text}.to_json(*args)
-  end
-
   def ==(other)
     self.class == other.class && id == other.id && text == other.text
+  end
+
+  def to_json(*args)
+    {:id => id, :text => text}.to_json(*args)
   end
 
   private
