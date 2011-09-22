@@ -38,6 +38,8 @@ end
 
 delete '/ideas/:id' do
   Idea.delete(params[:id])
+
+  status 200
 end
 
 get '/styles.css' do

@@ -5,19 +5,37 @@ $header-background-color: rgb(178, 25, 20);
 
 @mixin round-corners($radius: 5px) {
   border-radius: $radius;
+  -moz-border-radius: $radius;
 }
 
 @mixin linear-gradient($from-color, $to-color) {
   background: -webkit-linear-gradient(top, $from-color, $to-color);
+  background: -moz-linear-gradient(top, $from-color, $to-color);
+}
+
+@mixin box-shadow($x: 0, $y: 0, $radius: 5px, $color: rgba(0, 0, 0, 0.5)) {
+  box-shadow: $x $y $radius $color;
+  -moz-box-shadow: $x $y $radius $color;
+}
+
+@mixin inset-outset-box-shadow($x, $y, 
+                               $inset-radius, $inset-color,
+                               $outset-radius, $outset-color) {
+  box-shadow: inset $x $y $inset-radius $inset-color, $x $y $outset-radius, $outset-color;
+  -moz-box-shadow: inset $x $y $inset-radius $inset-color, $x $y $outset-radius $outset-color;
+}
+
+@mixin double-box-shadow($x, $y, $radius1, $color1, $radius2, $color2) {
+  box-shadow: $x $y $radius1 $color1, $x $y $radius2, $color2;
+  -moz-box-shadow: $x $y $radius1 $color1, $x $y $radius2 $color2;
 }
 
 
 @mixin button-base($background-color: rgb(20, 20, 20), $height: 30px) {
   @include round-corners(15px);
   @include linear-gradient(lighten($background-color, 20%), $background-color);
-
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.8),
-              0 0 5px rgba(0, 0, 0, 0.6) inset;
+  @include inset-outset-box-shadow(0, 0, 5px, rgba(0, 0, 0, 0.6), 
+                                         5px, rgba(0, 0, 0, 0.8));
 
   color: rgba(255, 255, 255, 0.9);
   border: none;
@@ -34,12 +52,14 @@ $header-background-color: rgb(178, 25, 20);
 }
 
 @mixin hovered-button($background-color, $height) {
+  @include inset-outset-box-shadow(0, 0, 3px, rgba(0, 0, 0, 0.6), 
+                                         8px, rgba(0, 0, 0, 0.8));
   text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.8), 0 0 3px rgba(0, 0, 0, 0.6) inset;
 }
 
 @mixin pressed-button($background-color, $height) {
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.8), 0 0 3px rgba(0, 0, 0, 0.6) inset;
+  @include inset-outset-box-shadow(0, 0, 3px, rgba(0, 0, 0, 0.6), 
+                                         6px, rgba(0, 0, 0, 0.8));
   position: relative;
   top: 1px;
 }
@@ -74,9 +94,9 @@ body {
 
 #content {
   @include round-corners(5px);
+  @include box-shadow(0, 0, 10px, rgba(0, 0, 0, 0.5));
 
   background: $content-background-color;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 
   width: $content-width;
   margin: 0 auto 40px auto;
@@ -87,6 +107,7 @@ body {
     padding: 0;
     width: 100%;
     height: 100px;
+    display: block;
 
     h1 { 
       background-image: url(/lightbulb.jpg);
@@ -116,13 +137,13 @@ body {
 
       #search {
         @include round-corners;
+        @include box-shadow(0, 0, 10px, rgba(0, 0, 0, 0.5));
           
         background-image: url(/search.png);
         background-repeat: no-repeat;
         background-position: 4px center;
         background-color: rgba(255, 255, 255, 0.8);
         border: none;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 
         color: black;
         
@@ -137,7 +158,7 @@ body {
 
       #trash {
         @include round-corners;
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        @include box-shadow(0, 0, 5px, rgba(0, 0, 0, 0.5));
 
         background-color: rgba(0, 0, 0, 0.4);
         background-image: url(/trash.png); 
@@ -156,7 +177,7 @@ body {
         bottom: 10px;
 
         &.active {
-          box-shadow: 0 0 5px rgba(0, 0, 0, 0.5), 0 0 15px rgb(255, 255, 255);
+          background-color: rgba(0, 0, 0, 0.6);
         }
       }
     }
@@ -170,9 +191,9 @@ body {
 
     li {
       @include round-corners(3px);
+      @include box-shadow(0, 0, 10px, rgba(0, 0, 0, 0.5));
+
       background: rgba(255, 255, 255, 0.6);
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-      
       margin: 10px;
       padding: 2px;
       position: relative;

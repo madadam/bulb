@@ -76,15 +76,18 @@
                 },
 
     trash:      function(idea, effect) {
-                  $.ajax("/ideas/" + this.getId(idea), {type: "DELETE"});
+                  $.ajax("/ideas/" + this.getId(idea), {
+                    type:     "DELETE",
+                    success:  function() {
+                                var callback = function() { idea.remove(); };
 
-                  var callback = function() { idea.remove(); };
-
-                  if (effect == "fade") {
-                    idea.fadeOut(200, callback);
-                  } else {
-                    idea.slideUp(200, callback);
-                  }
+                                if (effect == "fade") {
+                                  idea.fadeOut(200, callback);
+                                } else {
+                                  idea.slideUp(200, callback);
+                                }
+                              }
+                  });
                 },
 
     isNew:      function(idea) {
@@ -116,19 +119,32 @@
     _makeEditable:  function(idea) {
                       var me = this;
 
-                      var url = "/ideas";
-                      var method = "POST";
+                      var callback = function(value, settings) {
+                        if (me.isNew(idea)) {
+                          var method = "POST";
+                          var url    = "/ideas";
+                        } else {
+                          var method = "PUT";
+                          var url    = "/ideas/" + me.getId(idea);
+                        }
 
-                      idea.find(".text").editable(url, {
+                        $.ajax(url, {
+                          type:     method,
+                          data:     {value: value},
+                          complete: function() { newIdeaButton.enable(); },
+                          success:  function(data) {
+                                      idea.attr("id", "idea-" + data["id"]);
+                                    }
+                        });
+
+                        return value;
+                      }
+
+                      idea.find(".text").editable(callback, {
                         cancel:   "Cancel",
-                        method:   method,
                         submit:   "Save",
                         tooltip:  "Click to edit.",
                         type:     "textarea",
-
-                        callback: function() {
-                                    newIdeaButton.enable();
-                                  },
 
                         onreset:  function() {
                                     if (me.isNew(idea)) {

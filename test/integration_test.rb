@@ -1,6 +1,5 @@
 require 'test/unit'
 require 'capybara'
-require 'capybara-webkit'
 require 'capybara/dsl'
 
 require 'app'
@@ -9,7 +8,7 @@ class IntegrationTest < Test::Unit::TestCase
   include Capybara::DSL
 
   def setup
-    Capybara.current_driver = :webkit
+    Capybara.current_driver = :selenium
     Capybara.app = Sinatra::Application
 
     $redis.select 1
@@ -35,6 +34,18 @@ class IntegrationTest < Test::Unit::TestCase
     add_idea('test little bit')
 
     edit_idea('test little bit', 'test a lot')
+    assert has_no_content?('test little bit')
+    assert has_content?('test a lot')
+  end
+
+  def test_edited_idea_is_preserved_after_reload
+    visit '/'
+    add_idea('test little bit')
+
+    visit '/'
+    edit_idea('test little bit', 'test a lot')
+
+    visit '/'
     assert has_no_content?('test little bit')
     assert has_content?('test a lot')
   end
