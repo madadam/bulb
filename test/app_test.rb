@@ -29,14 +29,14 @@ class AppTest < Test::Unit::TestCase
     ideas = JSON.parse(last_response.body)
     assert_equal 3, ideas.size
 
-    assert_equal 1, ideas[0]['id']
-    assert_equal 'collect underpants', ideas[0]['text']
+    idea = ideas.find { |i| i['id'] == 1 }
+    assert_equal 'collect underpants', idea['text']
 
-    assert_equal 2, ideas[1]['id']
-    assert_equal '?', ideas[1]['text']
+    idea = ideas.find { |i| i['id'] == 2 }
+    assert_equal '?', idea['text']
 
-    assert_equal 3, ideas[2]['id']
-    assert_equal 'profit', ideas[2]['text']
+    idea = ideas.find { |i| i['id'] == 3 }
+    assert_equal 'profit', idea['text']
   end
 
   test 'POST /ideas' do

@@ -9,7 +9,7 @@ class IdeaTest < Test::Unit::TestCase
 
   test 'Idea.create stores the idea in redis' do
     Idea.create('fly to mars')
-    assert_equal 1, $redis.hlen('ideas')
+    assert_equal 1, $redis.scard('ideas')
   end
 
   test 'Idea.update updates an idea' do
@@ -43,14 +43,14 @@ class IdeaTest < Test::Unit::TestCase
 
     assert_equal 3, ideas.size
 
-    assert_equal 1, ideas[0].id
-    assert_equal 'invent time travel', ideas[0].text
+    idea = ideas.find { |i| i.id == 1 }
+    assert_equal 'invent time travel', idea.text
 
-    assert_equal 2, ideas[1].id
-    assert_equal 'travel to future', ideas[1].text
+    idea = ideas.find { |i| i.id == 2 }
+    assert_equal 'travel to future', idea.text
 
-    assert_equal 3, ideas[2].id
-    assert_equal 'go back and profit', ideas[2].text
+    idea = ideas.find { |i| i.id == 3 }
+    assert_equal 'go back and profit', idea.text
   end
 
   test 'Idea.all retrieves the ideas sorted' do
@@ -71,12 +71,12 @@ class IdeaTest < Test::Unit::TestCase
   test 'Idea#to_json' do
     idea = Idea.create('take over the world')
 
-    expected = {:id        => 1,
-                :timestamp => idea.timestamp,
-                :text      => 'take over the world',
-                :votes     => 0}
+    expected = {'id'        => 1,
+                'timestamp' => idea.timestamp,
+                'text'      => 'take over the world',
+                'votes'     => 0}
 
-    assert_equal expected.to_json, idea.to_json
+    assert_equal expected, JSON.parse(idea.to_json)
   end
 
   test 'ideas are created with zero votes' do
@@ -107,6 +107,18 @@ class IdeaTest < Test::Unit::TestCase
 
     idea = Idea.get(idea.id)
     assert_equal 3, idea.votes
+  end
+
+  test 'simultaneous votes do not overwrite each other' do
+    idea = Idea.create('foo')
+    idea1 = Idea.get(idea.id)
+    idea2 = Idea.get(idea.id)
+
+    idea1.vote!(1)
+    idea2.vote!(1)
+
+    idea = Idea.get(idea.id)
+    assert_equal 2, idea.votes
   end
 
   test 'older idea is before a younger one if they have the same votes' do
