@@ -1,4 +1,16 @@
 (function($) {
+
+  $.fn.shrink = function(duration, callback) {
+    return this.animate({ marginTop:  (this.outerHeight() / 2) + "px",
+                          marginLeft: (this.outerWidth() / 2) + "px",
+                          width:      0,
+                          height:     0,
+                          opacity:    0},
+                        duration,
+                        callback);
+  }
+
+
   // New idea button ------------------------------------------------------------------
   var newIdeaButton = {
     initialize: function() {
@@ -54,13 +66,11 @@
                     idea.attr("id", "idea-" + data["id"])
                   }
 
-                  if (data["votes"] != undefined) {
-                    this.setVotes(idea, data["votes"]);
-                  }
-
                   if (data["timestamp"]) {
                     idea.attr("data-timestamp", data["timestamp"])
                   }
+
+                  this.setVotes(idea, data["votes"] || 0);
 
                   this._makeEditable(idea)
                   this._makeDraggable(idea)
@@ -95,8 +105,8 @@
                     success:  function() {
                                 var callback = function() { idea.remove() }
 
-                                if (effect == "fade") {
-                                  idea.fadeOut(200, callback)
+                                if (effect == "shrink") {
+                                  idea.shrink(200, callback)
                                 } else {
                                   idea.slideUp(200, callback)
                                 }
@@ -134,7 +144,7 @@
                 },
 
     all:        function() {
-                  return this.list.find("li").filter(":visible")
+                  return this.list.find("li").not(this.template);
                 },
 
     filter:     function(query) {
@@ -273,7 +283,7 @@
                     out:        function() { $(this).removeClass("active") },
 
                     drop:       function(event, ui) {
-                                  ideas.trash(ui.draggable, "fade")
+                                  ideas.trash(ui.draggable, "shrink")
                                   $(this).removeClass("active")
                                 }
                   })
