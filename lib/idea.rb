@@ -1,8 +1,9 @@
 require 'redis'
 require 'json'
 
-# TODO: allow configuration
-$redis = Redis.new
+require File.expand_path('../../config', __FILE__)
+
+$redis = Redis.new(:host => REDIS_HOST, :port => REDIS_PORT)
 
 class Idea
   include Comparable

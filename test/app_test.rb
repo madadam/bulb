@@ -1,11 +1,12 @@
 require 'helper'
 require 'rack/test'
+require 'app'
 
 class AppTest < Test::Unit::TestCase
   include Rack::Test::Methods
 
   def app
-    Sinatra::Application
+    App
   end
 
   def setup
@@ -58,10 +59,6 @@ class AppTest < Test::Unit::TestCase
     put "/ideas/#{idea.id}", :value => 'spawn atomic zombies'
     assert_equal 200, last_response.status
 
-    hash = JSON.parse(last_response.body)
-    assert_equal idea.id, hash['id']
-    assert_equal 'spawn atomic zombies', hash['text']
-
     idea = Idea.get(idea.id)
     assert_equal 'spawn atomic zombies', idea.text
   end
@@ -80,7 +77,6 @@ class AppTest < Test::Unit::TestCase
 
     post "/ideas/#{idea.id}/up"
     assert_equal 200, last_response.status
-    assert_equal 'application/json', last_response.content_type
     assert_equal 1, Idea.get(idea.id).votes
   end
 
@@ -90,7 +86,6 @@ class AppTest < Test::Unit::TestCase
 
     post "/ideas/#{idea.id}/down"
     assert_equal 200, last_response.status
-    assert_equal 'application/json', last_response.content_type
     assert_equal 2, Idea.get(idea.id).votes
   end
 end

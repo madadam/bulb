@@ -47,150 +47,169 @@
 
   // Ideas ----------------------------------------------------------------------------
   var ideas = {
-    initialize: function() {
-                  this.list     = $("#ideas")
-                  this.template = $("#idea-template")
-                },
+    initialize:   function() {
+                    this.list     = $("#ideas")
+                    this.template = $("#idea-template")
+                  },
 
-    add:        function(data, ready) {
-                  var idea = this.template.clone()
+    add:          function(data, ready) {
+                    var idea = this.template.clone()
 
-                  idea.removeAttr("id")
-                  idea.appendTo(this.list)
+                    idea.removeAttr("id")
+                    idea.appendTo(this.list)
 
-                  if (data["text"]) {
-                    idea.find(".text").text(data["text"])
-                  }
-
-                  if (data["id"]) {
-                    idea.attr("id", "idea-" + data["id"])
-                  }
-
-                  if (data["timestamp"]) {
-                    idea.attr("data-timestamp", data["timestamp"])
-                  }
-
-                  this.setVotes(idea, data["votes"] || 0);
-
-                  this._makeEditable(idea)
-                  this._makeDraggable(idea)
-                  this._makeVotable(idea)
-
-                  if (typeof(ready) == "function") {
-                    var callback = function() { ready(idea) }
-                  } else {
-                    var callback = function() {}
-                  }
-
-                  idea.slideDown(200, callback)
-                },
-
-    addNew:     function() {
-                  newIdeaButton.disable()
-
-                  this.add({}, function(idea) {
-                    var text = idea.find(".text")
-
-                    text.click()
-                    text.find("textarea").select()
-
-                    var distance = idea.offset().top
-                    $(document).scrollTop(distance)
-                  })
-                },
-
-    trash:      function(idea, effect) {
-                  $.ajax("/ideas/" + this.getId(idea), {
-                    type:     "DELETE",
-                    success:  function() {
-                                var callback = function() { idea.remove() }
-
-                                if (effect == "shrink") {
-                                  idea.shrink(200, callback)
-                                } else {
-                                  idea.slideUp(200, callback)
-                                }
-                              }
-                  })
-                },
-
-    isNew:      function(idea) {
-                  return idea.attr("id") == undefined
-                },
-
-    getId:      function(idea) {
-                  var id = idea.attr("id")
-
-                  if (id) {
-                    return id.slice("idea-".length)
-                  } else {
-                    return undefined
-                  }
-                },
-
-    setVotes:   function(idea, votes) {
-                  idea.attr("data-votes", votes)
-                  idea.find(".votes").text(votes)
-                },
-
-    load:       function() {
-                  var me = this
-
-                  $.getJSON("/ideas", function(data) {
-                    data.forEach(function(datum) {
-                      me.add(datum)
-                    })
-                  })
-                },
-
-    all:        function() {
-                  return this.list.find("li").not(this.template);
-                },
-
-    filter:     function(query) {
-                  this.all().each(function() {
-                    var idea = $(this)
-                    var text = idea.find('.text').text()
-
-                    if (text.toLowerCase().indexOf(query.toLowerCase()) > -1) {
-                      idea.show()
-                    } else {
-                      idea.hide()
+                    if (data["text"]) {
+                      idea.find(".text").text(data["text"])
                     }
-                  })
-                },
 
-    vote:       function(idea, way) {
-                  var me = this
-                  var id = this.getId(idea)
-                  if (id == undefined) return
+                    if (data["id"]) {
+                      idea.attr("id", "idea-" + data["id"])
+                    }
 
-                  $.post("/ideas/" + id + "/" + way, function(data) {
-                    me.setVotes(idea, data["votes"])
-                    me.sort(idea)
-                  })
-                },
+                    if (data["timestamp"]) {
+                      idea.attr("data-timestamp", data["timestamp"])
+                    }
 
-    sort:       function(idea) {
-                  var all   = this.all()
-                  var index = this._findIndexToInsert(all, idea)
+                    this.setVotes(idea, data["votes"] || 0);
 
-                  all.move(idea, index)
-                },
+                    this._makeEditable(idea)
+                    this._makeDraggable(idea)
+                    this._makeVotable(idea)
 
-    isLess:     function(a, b) {
-                  var aVotes = parseInt(a.attr("data-votes"))
-                  var bVotes = parseInt(b.attr("data-votes"))
+                    if (typeof(ready) == "function") {
+                      var callback = function() { ready(idea) }
+                    } else {
+                      var callback = function() {}
+                    }
 
-                  if (aVotes == bVotes) {
-                    var aTimestamp = parseInt(a.attr("data-timestamp"))
-                    var bTimestamp = parseInt(b.attr("data-timestamp"))
+                    idea.slideDown(200, callback)
+                  },
 
-                    return aTimestamp < bTimestamp
-                  } else {
-                    return aVotes > bVotes
-                  }
-                },
+    addNew:       function() {
+                    newIdeaButton.disable()
+
+                    this.add({}, function(idea) {
+                      var text = idea.find(".text")
+
+                      text.click()
+                      text.find("textarea").select()
+
+                      var distance = idea.offset().top
+                      $(document).scrollTop(distance)
+                    })
+                  },
+
+    startVote:    function(idea, way) {
+                    var me = this
+                    var id = this.getId(idea)
+                    if (id == undefined) return
+
+                    $.post("/ideas/" + id + "/" + way)
+                  },
+
+    finishVote:   function(id, votes) {
+                    var idea = this.find(id)
+
+                    this.setVotes(idea, votes)
+                    this.sort(idea)
+                  },
+
+
+    startDelete:  function(idea) {
+                    $.ajax("/ideas/" + this.getId(idea), { type: "DELETE" })
+                  },
+
+    finishDelete: function(id) {
+                    var idea = this.find(id)
+                    if (idea.length <= 0) return
+
+                    this.remove(idea, "shrink")
+                  },
+
+    remove:       function(idea, effect) {
+                    var callback = function() { idea.remove() }
+
+                    if (effect == "shrink") {
+                      idea.shrink(200, callback)
+                    } else {
+                      idea.slideUp(200, callback)
+                    }
+                  },
+
+    finishUpdate: function(id, text) {
+                    this.find(id).find(".text").text(text)
+                  },
+
+    isNew:        function(idea) {
+                    return idea.attr("id") == undefined
+                  },
+
+    getId:        function(idea) {
+                    var id = idea.attr("id")
+
+                    if (id) {
+                      return id.slice("idea-".length)
+                    } else {
+                      return undefined
+                    }
+                  },
+
+    setVotes:     function(idea, votes) {
+                    idea.attr("data-votes", votes)
+                    idea.find(".votes").text(votes)
+                  },
+
+    load:         function() {
+                    var me = this
+
+                    $.getJSON("/ideas", function(data) {
+                      data.forEach(function(datum) {
+                        me.add(datum)
+                      })
+                    })
+                  },
+
+    all:          function() {
+                    return this.list.find("li").not(this.template);
+                  },
+
+    find:         function(id) {
+                    return $("#idea-" + id)
+                  },
+
+    filter:       function(query) {
+                    this.all().each(function() {
+                      var idea = $(this)
+                      var text = idea.find('.text').text()
+
+                      if (text.toLowerCase().indexOf(query.toLowerCase()) > -1) {
+                        idea.show()
+                      } else {
+                        idea.hide()
+                      }
+                    })
+                  },
+
+    sort:         function(idea) {
+                    var all   = this.all()
+                    var index = this._findIndexToInsert(all, idea)
+
+                    all.move(idea, index)
+                  },
+
+    isLess:       function(a, b) {
+                    var aVotes = parseInt(a.attr("data-votes"))
+                    var bVotes = parseInt(b.attr("data-votes"))
+
+                    if (aVotes == bVotes) {
+                      var aTimestamp = parseInt(a.attr("data-timestamp"))
+                      var bTimestamp = parseInt(b.attr("data-timestamp"))
+
+                      return aTimestamp < bTimestamp
+                    } else {
+                      return aVotes > bVotes
+                    }
+                  },
 
     // privates
 
@@ -241,7 +260,7 @@
 
                         onreset:  function() {
                                     if (me.isNew(idea)) {
-                                      me.trash(idea, "slide")
+                                      me.remove(idea, "slide")
                                       newIdeaButton.enable()
                                     }
                                   }
@@ -261,12 +280,12 @@
                       var me = this
 
                       idea.find('a.up').click(function() {
-                        me.vote(idea, "up")
+                        me.startVote(idea, "up")
                         return false
                       })
 
                       idea.find('a.down').click(function() {
-                        me.vote(idea, "down")
+                        me.startVote(idea, "down")
                         return false
                       })
                     }
@@ -283,7 +302,7 @@
                     out:        function() { $(this).removeClass("active") },
 
                     drop:       function(event, ui) {
-                                  ideas.trash(ui.draggable, "shrink")
+                                  ideas.startDelete(ui.draggable, "shrink")
                                   $(this).removeClass("active")
                                 }
                   })
@@ -324,5 +343,32 @@
     trash.initialize()
 
     ideas.load()
+
+    var host      = document.location.hostname
+    var protocol  = document.location.protocol.replace(/http(s?):/, "ws$1:")
+    var port      = $("body").attr("data-web-socket-port")
+    var socketUrl = protocol + "//" + host + ":" + port
+    var socket    = new WebSocket(socketUrl)
+
+    socket.onmessage = function(message) {
+      var data    = JSON.parse(message.data)
+      var action  = data.action
+      var payload = data.payload
+
+      switch (action) {
+        case 'ideas/create':
+          ideas.add(payload, function() {})
+          break
+        case 'ideas/delete':
+          ideas.finishDelete(payload["id"], "shrink")
+          break
+        case 'ideas/vote':
+          ideas.finishVote(payload["id"], payload["votes"])
+          break
+        case 'ideas/update':
+          ideas.finishUpdate(payload["id"], payload["text"])
+          break
+      }
+    }
   })
 })(jQuery)
