@@ -19,7 +19,8 @@
                   this.element = $("#new-idea")
                   this.element.click(function() {
                     if (me.isEnabled()) {
-                      ideas.addNew()
+                      var idea = ideas.addEmpty()
+                      ideas.edit(idea)
                     }
 
                     return false
@@ -53,50 +54,44 @@
                   },
 
     add:          function(data, ready) {
-                    var idea = this.template.clone()
-
-                    idea.removeAttr("id")
-                    idea.appendTo(this.list)
+                    var idea = this.find(data["id"]) || this.addEmpty()
 
                     if (data["text"]) {
                       idea.find(".text").text(data["text"])
-                    }
-
-                    if (data["id"]) {
-                      idea.attr("id", "idea-" + data["id"])
                     }
 
                     if (data["timestamp"]) {
                       idea.attr("data-timestamp", data["timestamp"])
                     }
 
-                    this.setVotes(idea, data["votes"] || 0);
-
-                    this._makeEditable(idea)
-                    this._makeDraggable(idea)
-                    this._makeVotable(idea)
-
-                    if (typeof(ready) == "function") {
-                      var callback = function() { ready(idea) }
-                    } else {
-                      var callback = function() {}
+                    if (idea.attr("id") == undefined && data["id"]) {
+                      idea.attr("id", "idea-" + data["id"])
                     }
 
-                    idea.slideDown(200, callback)
+                    this._makeDraggable(idea)
+                    this._makeVotable(idea)
+                    this.setVotes(idea, data["votes"] || 0);
                   },
 
-    addNew:       function() {
-                    newIdeaButton.disable()
+    addEmpty:     function() {
+                    var idea = this.template.clone()
 
-                    this.add({}, function(idea) {
-                      var text = idea.find(".text")
+                    idea.removeAttr("id")
+                    idea.appendTo(this.list)
+                    this._makeEditable(idea)
+                    idea.slideDown(200)
 
-                      text.click()
-                      text.find("textarea").select()
+                    return idea
+                  },
 
-                      var distance = idea.offset().top
-                      $(document).scrollTop(distance)
-                    })
+    edit:         function(idea) {
+                    var text = idea.find(".text")
+
+                    text.click()
+                    text.find("textarea").select()
+
+                    var distance = idea.offset().top
+                    $(document).scrollTop(distance)
                   },
 
     startVote:    function(idea, way) {
@@ -134,10 +129,6 @@
                     } else {
                       idea.slideUp(200, callback)
                     }
-                  },
-
-    finishUpdate: function(id, text) {
-                    this.find(id).find(".text").text(text)
                   },
 
     isNew:        function(idea) {
@@ -231,23 +222,23 @@
     _makeEditable:  function(idea) {
                       var me = this
 
+                      var send = function(id, value) {
+                        $.ajax("/ideas/" + id, {
+                          type:     "PUT",
+                          data:     {value: value},
+                          complete: function() { newIdeaButton.enable() }
+                        })
+                      }
+
                       var callback = function(value, settings) {
                         if (me.isNew(idea)) {
-                          var method = "POST"
-                          var url    = "/ideas"
+                          $.post("/ideas/next-id", function(data) {
+                            idea.attr("id", "idea-" + data["id"])
+                            send(data["id"], value)
+                          })
                         } else {
-                          var method = "PUT"
-                          var url    = "/ideas/" + me.getId(idea)
+                          send(me.getId(idea), value)
                         }
-
-                        $.ajax(url, {
-                          type:     method,
-                          data:     {value: value},
-                          complete: function() { newIdeaButton.enable() },
-                          success:  function(data) {
-                                      idea.attr("id", "idea-" + data["id"])
-                                    }
-                        })
 
                         return value
                       }
@@ -277,14 +268,17 @@
                     },
 
     _makeVotable:   function(idea) {
+                      if (idea.hasClass("votable")) return
+                      idea.addClass("votable")
+
                       var me = this
 
-                      idea.find('a.up').click(function() {
+                      idea.find("a.up").click(function() {
                         me.startVote(idea, "up")
                         return false
                       })
 
-                      idea.find('a.down').click(function() {
+                      idea.find("a.down").click(function() {
                         me.startVote(idea, "down")
                         return false
                       })
@@ -331,8 +325,7 @@
                   this.element.keyup(function() {
                     ideas.filter(me.element.val())
                   })
-                },
-
+                }
   }
 
   var initializeSocket = function() {
@@ -357,17 +350,14 @@
       var payload = data.payload
 
       switch (action) {
-        case 'ideas/create':
-          ideas.add(payload, function() {})
+        case 'ideas/put':
+          ideas.add(payload)
           break
         case 'ideas/delete':
           ideas.finishDelete(payload["id"], "shrink")
           break
         case 'ideas/vote':
           ideas.finishVote(payload["id"], payload["votes"])
-          break
-        case 'ideas/update':
-          ideas.finishUpdate(payload["id"], payload["text"])
           break
       }
     }

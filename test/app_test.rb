@@ -20,9 +20,9 @@ class AppTest < Test::Unit::TestCase
   end
 
   test 'GET /ideas' do
-    Idea.create('collect underpants')
-    Idea.create('?')
-    Idea.create('profit')
+    Idea.create(:text => 'collect underpants')
+    Idea.create(:text => '?')
+    Idea.create(:text => 'profit')
 
     get '/ideas'
     assert_equal 200, last_response.status
@@ -40,21 +40,18 @@ class AppTest < Test::Unit::TestCase
     assert_equal 'profit', idea['text']
   end
 
-  test 'POST /ideas' do
-    post '/ideas', :value => 'build spaceship'
-    assert_equal 201, last_response.status
+  test 'PUT /ideas/:id with non-existing id' do
+    id = 42
 
-    hash = JSON.parse(last_response.body)
-    assert_equal 1, hash['id']
-    assert_equal 'build spaceship', hash['text']
+    put "/ideas/#{id}", :value => 'spawn vampires'
+    assert_equal 200, last_response.status
 
-    idea = Idea.all.first
-    assert_equal 1, idea.id
-    assert_equal 'build spaceship', idea.text
+    idea = Idea.get(id)
+    assert_equal 'spawn vampires', idea.text
   end
 
-  test 'PUT /ideas/:id' do
-    idea = Idea.create('spawn zombies')
+  test 'PUT /ideas/:id with existing id' do
+    idea = Idea.create(:text => 'spawn zombies')
 
     put "/ideas/#{idea.id}", :value => 'spawn atomic zombies'
     assert_equal 200, last_response.status
@@ -64,7 +61,7 @@ class AppTest < Test::Unit::TestCase
   end
 
   test 'DELETE /ideas/:id' do
-    idea = Idea.create('create black hole')
+    idea = Idea.create(:text => 'create black hole')
 
     delete "/ideas/#{idea.id}"
     assert_equal 200, last_response.status
@@ -73,7 +70,7 @@ class AppTest < Test::Unit::TestCase
   end
 
   test 'POST /ideas/:id/up' do
-    idea = Idea.create('foo')
+    idea = Idea.create(:text => 'foo')
 
     post "/ideas/#{idea.id}/up"
     assert_equal 200, last_response.status
@@ -81,7 +78,7 @@ class AppTest < Test::Unit::TestCase
   end
 
   test 'POST /ideas/:id/down' do
-    idea = Idea.create('foo')
+    idea = Idea.create(:text => 'foo')
     idea.vote!(3)
 
     post "/ideas/#{idea.id}/down"

@@ -5,21 +5,24 @@ require File.expand_path('../../config', __FILE__)
 
 $redis = Redis.new(:host => REDIS_HOST, :port => REDIS_PORT)
 
-class Idea
-  include Comparable
-
-  def self.persistent_attr_accessor(name)
+module PersistentAttributes
+  def persistent_attr_accessor(name)
     persistent_attr_reader(name)
     persistent_attr_writer(name)
   end
 
-  def self.persistent_attr_reader(name)
+  def persistent_attr_reader(name)
     define_method(name) { read_attribute(name) }
   end
 
-  def self.persistent_attr_writer(name)
+  def persistent_attr_writer(name)
     define_method(:"#{name}=") { |value| write_attribute(name, value) }
   end
+end
+
+class Idea
+  include Comparable
+  extend PersistentAttributes
 
   attr_accessor :id
   persistent_attr_accessor :text
@@ -33,26 +36,28 @@ class Idea
     $redis.smembers('ideas').map { |id| new(id) }.sort
   end
 
-  def self.create(text)
-    new(next_id).tap do |idea|
-      idea.text      = text
-      idea.timestamp = Time.now.to_i
-
+  def self.create(attributes = {})
+    new(attributes[:id] || next_id).tap do |idea|
       $redis.sadd('ideas', idea.id)
+
+      idea.timestamp = attributes[:timestamp] || Time.now.to_i
+      idea.text = attributes[:text] if attributes[:text]
     end
   end
 
-  def self.update(id, text)
-    get(id).tap do |idea|
-      idea.text = text
-    end
+  def self.get_or_create(id)
+    get(id) || create(:id => id)
   end
 
   def self.delete(id)
+    new(id).delete
+  end
+
+  def delete
     $redis.multi do
-      $redis.del(attribute_key(id, :text),
-                 attribute_key(id, :timestamp),
-                 attribute_key(id, :votes))
+      $redis.del(attribute_key(:text),
+                 attribute_key(:timestamp),
+                 attribute_key(:votes))
       $redis.srem('ideas', id)
     end
 
@@ -63,12 +68,8 @@ class Idea
     $redis.incr('ideas/last-id')
   end
 
-  def self.attribute_key(id, attribute)
-    "ideas/#{id}/#{attribute}"
-  end
-
   def attribute_key(attribute)
-    self.class.attribute_key(id, attribute)
+    "ideas/#{id}/#{attribute}"
   end
 
   def read_attribute(name)
@@ -85,7 +86,8 @@ class Idea
 
   def vote!(points)
     # FIXME: there is still possibility of a race condition, making the
-    # votes negative.
+    # votes negative. This is solvable using WATCH, but that is supported
+    # only in sufficiently high version of redis server
     $redis.incrby(attribute_key(:votes), points) if votes + points >= 0
   end
 

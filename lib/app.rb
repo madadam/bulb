@@ -23,19 +23,16 @@ class App < Sinatra::Base
     ideas.to_json
   end
 
-  post '/ideas' do
-    idea = Idea.create(params[:value])
-
-    WebSocket.send 'ideas/create', idea
-
+  post '/ideas/next-id' do
     content_type :json
-    status 201
-    idea.to_json
+    {:id => Idea.next_id}.to_json
   end
 
   put '/ideas/:id' do
-    idea = Idea.update(params[:id], params[:value])
-    WebSocket.send 'ideas/update', idea
+    idea = Idea.get_or_create(params[:id])
+    idea.text = params[:value]
+
+    WebSocket.send 'ideas/put', idea
 
     status 200
   end

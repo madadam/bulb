@@ -8,36 +8,28 @@ class IdeaTest < Test::Unit::TestCase
   end
 
   test 'Idea.create stores the idea in redis' do
-    Idea.create('fly to mars')
+    Idea.create(:text => 'fly to mars')
     assert_equal 1, $redis.scard('ideas')
   end
 
-  test 'Idea.update updates an idea' do
-    idea = Idea.create('fly to jupiter')
-    Idea.update(idea.id, 'fly to uranus')
-    idea = Idea.get(idea.id)
-
-    assert_equal 'fly to uranus', idea.text
-  end
-
   test 'Idea.delete deletes an idea' do
-    idea = Idea.create('create artificial inteligence')
-    Idea.delete(idea.id)
+    idea = Idea.create(:text => 'create artificial inteligence')
+    idea.delete
 
     assert_nil Idea.get(idea.id)
   end
 
   test 'Idea.get retrieves idea by id' do
-    idea1 = Idea.create('create wormhole')
+    idea1 = Idea.create(:text => 'create wormhole')
     idea2 = Idea.get(idea1.id)
 
     assert_equal idea1, idea2
   end
 
   test 'Idea.all retrieves all previously created ideas' do
-    Idea.create('invent time travel')
-    Idea.create('travel to future')
-    Idea.create('go back and profit')
+    Idea.create(:text => 'invent time travel')
+    Idea.create(:text => 'travel to future')
+    Idea.create(:text => 'go back and profit')
 
     ideas = Idea.all
 
@@ -54,9 +46,9 @@ class IdeaTest < Test::Unit::TestCase
   end
 
   test 'Idea.all retrieves the ideas sorted' do
-    idea1 = Idea.create('foo')
-    idea2 = Idea.create('bar')
-    idea3 = Idea.create('baz')
+    idea1 = Idea.create(:text => 'foo')
+    idea2 = Idea.create(:text => 'bar')
+    idea3 = Idea.create(:text => 'baz')
 
     idea2.vote!(1)
     idea3.vote!(2)
@@ -69,7 +61,7 @@ class IdeaTest < Test::Unit::TestCase
   end
 
   test 'Idea#to_json' do
-    idea = Idea.create('take over the world')
+    idea = Idea.create(:text => 'take over the world')
 
     expected = {'id'        => 1,
                 'timestamp' => idea.timestamp,
@@ -80,12 +72,12 @@ class IdeaTest < Test::Unit::TestCase
   end
 
   test 'ideas are created with zero votes' do
-    idea = Idea.create('foo')
+    idea = Idea.create(:text => 'foo')
     assert_equal 0, idea.votes
   end
 
   test 'Idea#vote!' do
-    idea = Idea.create('foo')
+    idea = Idea.create(:text => 'foo')
 
     idea.vote!(1)
     assert_equal 1, idea.votes
@@ -95,14 +87,14 @@ class IdeaTest < Test::Unit::TestCase
   end
 
   test 'Idea#vote! with negative number does nothing if there are zero votes' do
-    idea = Idea.create('foo')
+    idea = Idea.create(:text => 'foo')
     idea.vote!(-1)
 
     assert_equal 0, idea.votes
   end
 
   test 'votes are preserved' do
-    idea = Idea.create('foo')
+    idea = Idea.create(:text => 'foo')
     idea.vote!(3)
 
     idea = Idea.get(idea.id)
@@ -110,7 +102,7 @@ class IdeaTest < Test::Unit::TestCase
   end
 
   test 'simultaneous votes do not overwrite each other' do
-    idea = Idea.create('foo')
+    idea = Idea.create(:text => 'foo')
     idea1 = Idea.get(idea.id)
     idea2 = Idea.get(idea.id)
 
@@ -122,8 +114,8 @@ class IdeaTest < Test::Unit::TestCase
   end
 
   test 'older idea is before a younger one if they have the same votes' do
-    idea1 = Idea.create('foo')
-    idea2 = Idea.create('bar')
+    idea1 = Idea.create(:text => 'foo')
+    idea2 = Idea.create(:text => 'bar')
 
     idea1.timestamp = Time.local(2011, 9, 27, 22, 10, 11)
     idea2.timestamp = Time.local(2011, 9, 27, 22, 10, 21)
@@ -135,8 +127,8 @@ class IdeaTest < Test::Unit::TestCase
   end
 
   test 'idea with more votes is before one with less votes' do
-    idea1 = Idea.create('foo')
-    idea2 = Idea.create('bar')
+    idea1 = Idea.create(:text => 'foo')
+    idea2 = Idea.create(:text => 'bar')
 
     idea1.vote!(2)
     idea2.vote!(3)
