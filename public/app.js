@@ -335,14 +335,15 @@
 
   }
 
-  $(document).ready(function() {
-    ideas.initialize()
-    indicator.initialize()
-    newIdeaButton.initialize()
-    search.initialize()
-    trash.initialize()
-
-    ideas.load()
+  var initializeSocket = function() {
+    if (!window.WebSocket) {
+      if (window.MozWebSocket) {
+        var WebSocket = MozWebSocket
+      } else {
+        $("body").empty().html("<p class=\"fail\">This browser does not support WebSockets and that sucks.</p>")
+        return
+      }
+    }
 
     var host      = document.location.hostname
     var protocol  = document.location.protocol.replace(/http(s?):/, "ws$1:")
@@ -370,5 +371,17 @@
           break
       }
     }
+  }
+
+  $(document).ready(function() {
+    ideas.initialize()
+    indicator.initialize()
+    newIdeaButton.initialize()
+    search.initialize()
+    trash.initialize()
+
+    ideas.load()
+
+    initializeSocket();
   })
 })(jQuery)
