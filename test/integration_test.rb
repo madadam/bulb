@@ -1,13 +1,14 @@
 require 'helper'
 require 'capybara'
 require 'capybara/dsl'
+require 'capybara-webkit'
 require 'app'
 
 class IntegrationTest < Test::Unit::TestCase
   include Capybara::DSL
 
   def setup
-    Capybara.current_driver = :selenium
+    Capybara.current_driver = :webkit
     Capybara.app = App
 
     $redis.select 1
