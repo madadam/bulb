@@ -19,8 +19,7 @@
                   this.element = $("#new-idea")
                   this.element.click(function() {
                     if (me.isEnabled()) {
-                      var idea = ideas.addEmpty()
-                      ideas.edit(idea)
+                      var idea = ideas.addEmpty(ideas.edit)
                     }
 
                     return false
@@ -73,13 +72,15 @@
                     this.setVotes(idea, data["votes"] || 0);
                   },
 
-    addEmpty:     function() {
+    addEmpty:     function(ready) {
+                    if (ready == undefined) ready = function() {}
+
                     var idea = this.template.clone()
 
                     idea.removeAttr("id")
                     idea.appendTo(this.list)
                     this._makeEditable(idea)
-                    idea.slideDown(200)
+                    idea.slideDown(200, function() { ready(idea) })
 
                     return idea
                   },
@@ -165,7 +166,8 @@
                   },
 
     find:         function(id) {
-                    return $("#idea-" + id)
+                    var result = $("#idea-" + id)
+                    return result.length > 0 ? result : null
                   },
 
     filter:       function(query) {
@@ -331,7 +333,7 @@
   var initializeSocket = function() {
     if (!window.WebSocket) {
       if (window.MozWebSocket) {
-        var WebSocket = MozWebSocket
+        window.WebSocket = window.MozWebSocket
       } else {
         $("body").empty().html("<p class=\"fail\">This browser does not support WebSockets and that sucks.</p>")
         return

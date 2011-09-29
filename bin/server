@@ -9,7 +9,7 @@ require File.expand_path('../../config', __FILE__)
 require 'app'
 require 'web_socket'
 
-PID_FILE = "/var/run/#{APP_NAME}.pid"
+PID_FILE = '/var/run/bulb.pid'
 
 def start
   EventMachine.run do
