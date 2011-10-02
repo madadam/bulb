@@ -1,8 +1,5 @@
 require 'helper'
-require 'capybara'
 require 'capybara/dsl'
-require 'capybara-webkit'
-require 'app'
 
 class IntegrationTest < Test::Unit::TestCase
   include Capybara::DSL
@@ -11,8 +8,8 @@ class IntegrationTest < Test::Unit::TestCase
     Capybara.current_driver = :webkit
     Capybara.app = App
 
-    $redis.select 1
-    $redis.flushdb
+    DB.select 1
+    DB.flushdb
   end
 
   test 'add idea' do

@@ -1,15 +1,14 @@
 require 'helper'
-require 'idea'
 
 class IdeaTest < Test::Unit::TestCase
   def setup
-    $redis.select 1
-    $redis.flushdb
+    DB.select 1
+    DB.flushdb
   end
 
   test 'Idea.create stores the idea in redis' do
     Idea.create(:text => 'fly to mars')
-    assert_equal 1, $redis.scard('ideas')
+    assert_equal 1, DB.scard('ideas')
   end
 
   test 'Idea.delete deletes an idea' do

@@ -1,29 +1,31 @@
 #! /usr/bin/env ruby
 
+ENV['RACK_ENV'] ||= 'development'
+
 $:.unshift(File.expand_path('../../lib', __FILE__))
-
-require 'eventmachine'
-require 'thin'
-
-require File.expand_path('../../config', __FILE__)
-require 'app'
-require 'web_socket'
+require 'setup'
 
 def start
   host = '0.0.0.0'
 
   EventMachine.run do
-    WebSocket.run! :port => WEB_SOCKET_PORT
+    WebSocket.run! :port => CONFIG[:web_socket_port]
 
-    server = Thin::Server.new(host, APP_PORT) do
+    server = Thin::Server.new host, CONFIG[:app_port] do
+      if CONFIG[:password]
+        use Rack::Auth::Basic do |username, password|
+          password == CONFIG[:password]
+        end
+      end
+
       run App
     end
 
-    server.pid_file = PID_FILE
-    server.log_file = LOG_FILE
+    server.pid_file = CONFIG[:pid_file]
+    server.log_file = CONFIG[:log_file]
   
-    if DAEMONIZE
-      puts ">> bulb server listening on #{host}:#{APP_PORT}" if DAEMONIZE
+    if CONFIG[:daemonize]
+      puts ">> bulb server listening on #{host}:#{CONFIG[:app_port]}"
       server.daemonize
     end
 
@@ -32,11 +34,11 @@ def start
 end
 
 def stop
-  Thin::Server.kill(PID_FILE)
+  Thin::Server.kill CONFIG[:pid_file]
 end
 
 def restart
-  Thin::Server.restart(PID_FILE)
+  Thin::Server.restart CONFIG[:pid_file]
 end
 
 case ARGV[0]
@@ -46,4 +48,3 @@ when 'restart'  then restart
 else
   puts "Usage: #{$0} start|stop|restart"
 end
-

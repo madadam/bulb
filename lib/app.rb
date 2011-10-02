@@ -1,14 +1,7 @@
-require 'json'
-require 'sass'
-require 'sinatra/base'
-
-require 'idea'
-require 'web_socket'
-require File.expand_path('../../config', __FILE__)
-
 class App < Sinatra::Base
-  set     :logging, true
-  set     :public, File.expand_path('../../public', __FILE__)
+  set :logging, true
+  set :root,    File.expand_path('../../', __FILE__)
+
   enable  :raise_errors
   disable :show_exceptions
 

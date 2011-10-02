@@ -1,6 +1,5 @@
 require 'helper'
 require 'rack/test'
-require 'app'
 
 class AppTest < Test::Unit::TestCase
   include Rack::Test::Methods
@@ -10,8 +9,8 @@ class AppTest < Test::Unit::TestCase
   end
 
   def setup
-    $redis.select 1
-    $redis.flushdb
+    DB.select 1
+    DB.flushdb
   end
 
   test 'GET /' do

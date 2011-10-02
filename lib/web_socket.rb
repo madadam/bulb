@@ -1,5 +1,5 @@
-require 'json'
 require 'em-websocket'
+require 'json'
 
 unless defined?(WebSocket)
   WebSocket = Object.new
