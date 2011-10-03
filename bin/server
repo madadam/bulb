@@ -21,10 +21,10 @@ def start
       run App
     end
 
-    server.pid_file = CONFIG[:pid_file]
-    server.log_file = CONFIG[:log_file]
-  
     if CONFIG[:daemonize]
+      server.pid_file = CONFIG[:pid_file]
+      server.log_file = CONFIG[:log_file]
+  
       puts ">> bulb server listening on #{host}:#{CONFIG[:app_port]}"
       server.daemonize
     end

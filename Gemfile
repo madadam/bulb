@@ -13,3 +13,7 @@ group :test do
   gem 'capybara-webkit',      '~> 0.7.1'
   gem 'friendly_test_names',  '~> 0.1',     :require => false
 end
+
+group :development do
+  gem 'capistrano',           '~> 2.9.0',   :require => false
+end
