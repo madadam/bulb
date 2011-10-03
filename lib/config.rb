@@ -1,3 +1,5 @@
+require 'yaml'
+
 # Defaults
 CONFIG = {
   :app_port         => '3000',
@@ -9,5 +11,12 @@ CONFIG = {
   :pid_file         => 'bulb.pid'
 }
 
-path = File.expand_path('../../config.rb', __FILE__)
-require path if File.exists? path
+path = File.expand_path('../../config.yml', __FILE__)
+if File.exists?(path)
+  config = YAML.load_file(path).inject({}) do |memo, (key, value)|
+    memo[key.to_sym] = value
+    memo
+  end
+
+  CONFIG.update(config)
+end
