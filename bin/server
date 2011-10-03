@@ -1,7 +1,5 @@
 #! /usr/bin/env ruby
 
-ENV['RACK_ENV'] ||= 'development'
-
 $:.unshift(File.expand_path('../../lib', __FILE__))
 require 'setup'
 
