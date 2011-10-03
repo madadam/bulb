@@ -2,6 +2,7 @@ require 'yaml'
 
 # Defaults
 CONFIG = {
+  :authenticate     => true,
   :app_port         => '3000',
   :web_socket_port  => '3001',
   :redis_host       => 'localhost',

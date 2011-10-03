@@ -27,7 +27,6 @@ task :deploy do
 
   config = ''
   config << "daemonize: true\n"
-  config << "password:  #{ENV['BULB_DEPLOY_PASSWORD']}\n" if ENV['BULB_DEPLOY_PASSWORD']
 
   ssh server, "cd #{dir} && echo \"#{config}\" > config.yml"
 

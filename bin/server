@@ -12,12 +12,6 @@ def start
     WebSocket.run! :port => CONFIG[:web_socket_port]
 
     server = Thin::Server.new host, CONFIG[:app_port] do
-      if CONFIG[:password]
-        use Rack::Auth::Basic do |username, password|
-          password == CONFIG[:password]
-        end
-      end
-
       run App
     end
 

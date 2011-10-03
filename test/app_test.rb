@@ -11,9 +11,35 @@ class AppTest < Test::Unit::TestCase
   def setup
     DB.select 1
     DB.flushdb
+
+    @alice = User.create(:email => 'alice@example.com', :password => 'foobar')
+  end
+
+  test 'successful authentication' do
+    authorize 'alice@example.com', 'foobar'
+    get '/'
+    assert_equal 200, last_response.status
+  end
+
+  test 'authentication without credentials' do
+    get '/'
+    assert_equal 401, last_response.status
+  end
+
+  test 'authentication with invalid email' do
+    authorize 'bob@example.com', 'bazqux'
+    get '/'
+    assert_equal 401, last_response.status
+  end
+
+  test 'authentication with invalid password' do
+    authorize 'alice@example.com', 'bazqux'
+    get '/'
+    assert_equal 401, last_response.status
   end
 
   test 'GET /' do
+    authenticate_as @alice
     get '/'
     assert_equal 200, last_response.status
   end
@@ -23,6 +49,7 @@ class AppTest < Test::Unit::TestCase
     Idea.create(:text => '?')
     Idea.create(:text => 'profit')
 
+    authenticate_as @alice
     get '/ideas'
     assert_equal 200, last_response.status
 
@@ -42,6 +69,7 @@ class AppTest < Test::Unit::TestCase
   test 'PUT /ideas/:id with non-existing id' do
     id = 42
 
+    authenticate_as @alice
     put "/ideas/#{id}", :value => 'spawn vampires'
     assert_equal 200, last_response.status
 
@@ -52,6 +80,7 @@ class AppTest < Test::Unit::TestCase
   test 'PUT /ideas/:id with existing id' do
     idea = Idea.create(:text => 'spawn zombies')
 
+    authenticate_as @alice
     put "/ideas/#{idea.id}", :value => 'spawn atomic zombies'
     assert_equal 200, last_response.status
 
@@ -62,6 +91,7 @@ class AppTest < Test::Unit::TestCase
   test 'DELETE /ideas/:id' do
     idea = Idea.create(:text => 'create black hole')
 
+    authenticate_as @alice
     delete "/ideas/#{idea.id}"
     assert_equal 200, last_response.status
 
@@ -71,6 +101,7 @@ class AppTest < Test::Unit::TestCase
   test 'POST /ideas/:id/up' do
     idea = Idea.create(:text => 'foo')
 
+    authenticate_as @alice
     post "/ideas/#{idea.id}/up"
     assert_equal 200, last_response.status
     assert_equal 1, Idea.get(idea.id).votes
@@ -80,8 +111,15 @@ class AppTest < Test::Unit::TestCase
     idea = Idea.create(:text => 'foo')
     idea.vote!(3)
 
+    authenticate_as @alice
     post "/ideas/#{idea.id}/down"
     assert_equal 200, last_response.status
     assert_equal 2, Idea.get(idea.id).votes
+  end
+
+  private
+
+  def authenticate_as(user)
+    authorize user.email, user.password
   end
 end

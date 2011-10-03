@@ -5,6 +5,15 @@ class App < Sinatra::Base
   enable  :raise_errors
   disable :show_exceptions
 
+  use Rack::Auth::Basic do |email, password|
+    if user = User.authenticate(email, password)
+      Thread.current[:user] = user
+      true
+    else
+      false
+    end
+  end
+
   get '/' do
     erb :main
   end
@@ -51,6 +60,10 @@ class App < Sinatra::Base
   end
 
   private
+
+  def current_user
+    Thread.current[:user]
+  end
 
   def vote(points)
     idea = Idea.get(params[:id])
