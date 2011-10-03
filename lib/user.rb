@@ -13,7 +13,7 @@ class User
   end
 
   def self.get_by_email(email)
-    id = DB.hget(email_key, email)
+    id = DB.hget email_key, email
     id && new(id)
   end
 
@@ -22,11 +22,16 @@ class User
   end
 
   def email=(value)
-    write_attribute(:email, value)
-    DB.hset(self.class.email_key, value, id)
+    write_attribute :email, value
+    DB.hset self.class.email_key, value, id
   end
 
   def self.email_key
     "#{key}/by-email"
+  end
+
+  def delete
+    DB.hdel self.class.email_key, email
+    super :email, :password
   end
 end
