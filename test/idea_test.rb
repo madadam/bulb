@@ -2,13 +2,7 @@ require 'helper'
 
 class IdeaTest < Test::Unit::TestCase
   def setup
-    DB.select 1
-    DB.flushdb
-  end
-
-  test 'Idea.create stores the idea in redis' do
-    Idea.create(:text => 'fly to mars')
-    assert_equal 1, DB.scard('ideas')
+    setup_redis
   end
 
   test 'Idea.delete deletes an idea' do

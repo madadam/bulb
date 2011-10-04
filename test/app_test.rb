@@ -9,9 +9,7 @@ class AppTest < Test::Unit::TestCase
   end
 
   def setup
-    DB.select 1
-    DB.flushdb
-
+    setup_redis
     @alice = User.create(:email => 'alice@example.com', :password => 'foobar')
   end
 

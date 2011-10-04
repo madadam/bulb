@@ -2,8 +2,9 @@ class Idea
   include Comparable
   include Persistent
 
-  persistent_attr_accessor :text
-  persistent_attr_accessor :timestamp
+  string          :text
+  integer         :timestamp
+  integer_reader  :votes
 
   def self.all
     super.sort
@@ -13,19 +14,11 @@ class Idea
     super({:timestamp => Time.now.to_i}.merge(attributes))
   end
 
-  def delete
-    super :text, :timestamp, :votes
-  end
-
-  def votes
-    read_attribute(:votes).to_i
-  end
-
   def vote!(points)
     # FIXME: there is still possibility of a race condition, making the
     # votes negative. This is solvable using WATCH, but that is supported
     # only in sufficiently high version of redis server
-    DB.incrby(attribute_key(:votes), points) if votes + points >= 0
+    increment! :votes, points if votes + points >= 0
   end
 
   def <=>(other)
