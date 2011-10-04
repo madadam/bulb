@@ -7,7 +7,7 @@ def start
   host = '0.0.0.0'
 
   EventMachine.run do
-    WebSocket.run! :port => CONFIG[:web_socket_port]
+    WebSocket.run!
 
     server = Thin::Server.new host, CONFIG[:app_port] do
       run App

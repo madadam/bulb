@@ -1,7 +1,7 @@
 class App < Sinatra::Base
-  set :logging, true
-  set :root,    File.expand_path('../../', __FILE__)
+  set :root, File.expand_path('../../', __FILE__)
 
+  enable  :logging
   enable  :raise_errors
   disable :show_exceptions
 
@@ -27,7 +27,7 @@ class App < Sinatra::Base
 
   post '/ideas/next-id' do
     content_type :json
-    {:id => Idea.next_id}.to_json
+    {:id => Idea.next_id!}.to_json
   end
 
   put '/ideas/:id' do

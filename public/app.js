@@ -313,7 +313,7 @@
                   this.element.ajaxStop(function()  { $(this).hide() })
 
                   this.element.ajaxError(function(event, request) {
-                    alert(request.responseText)
+                    alert(request.statusText)
                   })
                 }
   }

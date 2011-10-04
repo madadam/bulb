@@ -115,6 +115,17 @@ class AppTest < Test::Unit::TestCase
     assert_equal 2, Idea.get(idea.id).votes
   end
 
+  test 'POST /ideas/next-id' do
+    authenticate_as @alice
+
+    post '/ideas/next-id'
+    post '/ideas/next-id'
+    post '/ideas/next-id'
+
+    assert_equal 200, last_response.status
+    assert_equal 3, JSON.parse(last_response.body)['id']
+  end
+
   private
 
   def authenticate_as(user)

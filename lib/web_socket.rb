@@ -1,23 +1,21 @@
 require 'em-websocket'
 require 'json'
 
-unless defined?(WebSocket)
-  WebSocket = Object.new
-  WebSocket.instance_eval do
-    @sockets = []
+module WebSocket
+  SOCKETS = Set.new
 
-    def run!(options)
-      options[:host] ||= '0.0.0.0'
+  def self.run!(options = {})
+    options = { :host => '0.0.0.0',
+                :port => CONFIG[:web_socket_port] }.merge(options)
 
-      EventMachine::WebSocket.start(options) do |ws|
-        ws.onopen  { @sockets << ws }
-        ws.onclose { @sockets.delete(ws) }
-      end
+    EventMachine::WebSocket.start(options) do |ws|
+      ws.onopen  { SOCKETS << ws }
+      ws.onclose { SOCKETS.delete(ws) }
     end
+  end
 
-    def send(action, payload)
-      message = {:action => action, :payload => payload}.to_json
-      @sockets.each { |socket| socket.send(message) }
-    end
+  def self.send(action, payload)
+    message = {:action => action, :payload => payload}.to_json
+    SOCKETS.each { |socket| socket.send(message) }
   end
 end

@@ -8,8 +8,17 @@ class IntegrationTest < Test::Unit::TestCase
     Capybara.current_driver = :webkit
     Capybara.app = App
 
-    DB.select 1
-    DB.flushdb
+    setup_redis
+
+    @ws_thread = Thread.new { WebSocket.run! }
+    @ws_thread.run
+
+    alice = User.create :email => 'alice@example.com', :password => 'foobar'
+    authorize alice.email, alice.password
+  end
+
+  def teardown
+    @ws_thread.kill
   end
 
   test 'add idea' do
@@ -119,5 +128,11 @@ class IntegrationTest < Test::Unit::TestCase
     texts = all('#ideas li .text').map { |node| node.text }
     assert texts.index(one) < texts.index(two),
            "expected ideas to be in order: 1: #{one}, 2: #{two}, but were not"
+  end
+
+  # HACK: This method should be provided by capybara.
+  def authorize(username, password)
+    encoded_login = ["#{username}:#{password}"].pack("m*")
+    page.driver.header('Authorization', "Basic #{encoded_login}")
   end
 end
