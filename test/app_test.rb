@@ -64,6 +64,25 @@ class AppTest < Test::Unit::TestCase
     assert_equal 'profit', idea['text']
   end
 
+  test 'GET /ideas response contains votes' do
+    idea = Idea.create(:text => 'foo')
+    user1 = @alice
+    user2 = User.create
+    user3 = User.create
+
+    idea.upvote!(user1)
+    idea.upvote!(user2)
+    idea.downvote!(user3)
+
+    authenticate_as user1
+    get '/ideas'
+
+    idea = JSON.parse(last_response.body).first
+
+    assert_equal 1, idea['votes']
+    assert_equal 'upvote', idea['my_vote']
+  end
+
   test 'PUT /ideas/:id with non-existing id' do
     id = 42
 
@@ -91,28 +110,73 @@ class AppTest < Test::Unit::TestCase
 
     authenticate_as @alice
     delete "/ideas/#{idea.id}"
-    assert_equal 200, last_response.status
 
+    assert_equal 200, last_response.status
     assert_nil Idea.get(idea.id)
   end
 
-  test 'POST /ideas/:id/up' do
+  test 'POST /ideas/:id/toggle-upvote of not upvoted idea upvotes' do
     idea = Idea.create(:text => 'foo')
 
     authenticate_as @alice
-    post "/ideas/#{idea.id}/up"
+    post "/ideas/#{idea.id}/toggle-upvote"
+
     assert_equal 200, last_response.status
-    assert_equal 1, Idea.get(idea.id).votes
+    assert Idea.get(idea.id).upvoted_by?(@alice)
   end
 
-  test 'POST /ideas/:id/down' do
+  test 'POST /ideas/:id/toggle-upvote of upvoted idea removes the upvote' do
     idea = Idea.create(:text => 'foo')
-    idea.vote!(3)
+    idea.upvote!(@alice)
 
     authenticate_as @alice
-    post "/ideas/#{idea.id}/down"
+    post "/ideas/#{idea.id}/toggle-upvote"
+
     assert_equal 200, last_response.status
-    assert_equal 2, Idea.get(idea.id).votes
+    assert !Idea.get(idea.id).upvoted_by?(@alice)
+  end
+
+  test 'POST /ideas/:id/toggle-upvote of downvoted idea upvotes' do
+    idea = Idea.create(:text => 'foo')
+    idea.downvote!(@alice)
+
+    authenticate_as @alice
+    post "/ideas/#{idea.id}/toggle-upvote"
+
+    assert_equal 200, last_response.status
+    assert Idea.get(idea.id).upvoted_by?(@alice)
+  end
+
+  test 'POST /ideas/:id/toggle-downvote of not downvoted idea downvotes' do
+    idea = Idea.create(:text => 'foo')
+
+    authenticate_as @alice
+    post "/ideas/#{idea.id}/toggle-downvote"
+
+    assert_equal 200, last_response.status
+    assert idea.downvoted_by?(@alice)
+  end
+
+  test 'POST /ideas/:id/toggle-downvote of downvoted idea removes the downvote' do
+    idea = Idea.create(:text => 'foo')
+    idea.downvote!(@alice)
+
+    authenticate_as @alice
+    post "/ideas/#{idea.id}/toggle-downvote"
+
+    assert_equal 200, last_response.status
+    assert !idea.downvoted_by?(@alice)
+  end
+
+  test 'POST /ideas/:id/toggle-downvote of upvoted idea downvotes' do
+    idea = Idea.create(:text => 'foo')
+    idea.upvote!(@alice)
+
+    authenticate_as @alice
+    post "/ideas/#{idea.id}/toggle-downvote"
+
+    assert_equal 200, last_response.status
+    assert Idea.get(idea.id).downvoted_by?(@alice)
   end
 
   test 'POST /ideas/next-id' do

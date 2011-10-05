@@ -6,11 +6,12 @@ class Ninja
   string  :name
   string  :weapon
   integer :kills
+  set     :targets
 
   index   :name
 end
 
-class Samurai
+class Zombie
   include Persistent
 end
 
@@ -98,7 +99,7 @@ class PersistentTest < Test::Unit::TestCase
 
   test 'records are not equal if they are of different class' do
     record1 = Ninja.create :id => 1
-    record2 = Samurai.create :id => 1
+    record2 = Zombie.create :id => 1
 
     assert_not_equal record1, record2
   end
@@ -159,6 +160,43 @@ class PersistentTest < Test::Unit::TestCase
     record.increment!(:kills, 100)
 
     assert_equal 122, record.kills
+  end
+
+  test 'set attribute can be added to' do
+    record = Ninja.create :id => 1
+    record.targets << 'one-eyed zombie'
+    record.targets << 'punk zombie'
+
+    assert_equal 2, @redis.scard('ninjas/1/targets')
+    assert @redis.sismember('ninjas/1/targets', 'one-eyed zombie')
+    assert @redis.sismember('ninjas/1/targets', 'punk zombie')
+  end
+
+  test 'set attribute can be tested for presence of a member' do
+    record = Ninja.create
+    record.targets << 'zombie with fork in the eye'
+
+    assert  record.targets.include?('zombie with fork in the eye')
+    assert !record.targets.include?('zombie with no jaw')
+  end
+
+  test 'set attribute can be removed from' do
+    record = Ninja.create :id => 1
+    record.targets << 'fat zombie'
+    record.targets << 'tall zombie'
+
+    record.targets.delete('tall zombie')
+
+    assert  @redis.sismember('ninjas/1/targets', 'fat zombie')
+    assert !@redis.sismember('ninjas/1/targets', 'tall zombie')
+  end
+
+  test 'set attribute can be inquiried for size' do
+    record = Ninja.create
+    record.targets << 'zombie with a hole in his chest'
+    record.targets << 'zombie with no arms'
+
+    assert_equal 2, record.targets.size
   end
 
   test 'indexes attributes' do

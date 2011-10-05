@@ -19,7 +19,7 @@ class App < Sinatra::Base
   end
 
   get '/ideas' do
-    ideas = Idea.all
+    ideas = Idea.all.map { |idea| present_idea(idea) }
 
     content_type :json
     ideas.to_json
@@ -34,7 +34,7 @@ class App < Sinatra::Base
     idea = Idea.get_or_create(params[:id])
     idea.text = params[:value]
 
-    WebSocket.send 'ideas/put', idea
+    WebSocket.send 'ideas/put', present_idea(idea)
 
     status 200
   end
@@ -46,12 +46,22 @@ class App < Sinatra::Base
     status 200
   end
 
-  post '/ideas/:id/up' do
-    vote(1)
+  post '/ideas/:id/toggle-upvote' do
+    idea = Idea.get(params[:id])
+    idea.toggle_upvote!(current_user)
+
+    WebSocket.send 'ideas/vote', present_idea(idea)
+
+    status 200
   end
 
-  post '/ideas/:id/down' do
-    vote(-1)
+  post '/ideas/:id/toggle-downvote' do
+    idea = Idea.get(params[:id])
+    idea.toggle_downvote!(current_user)
+
+    WebSocket.send 'ideas/vote', present_idea(idea)
+
+    status 200
   end
 
   get '/styles.css' do
@@ -59,17 +69,19 @@ class App < Sinatra::Base
     scss :styles
   end
 
-  private
-
-  def current_user
-    Thread.current[:user]
+  helpers do
+    def current_user
+      Thread.current[:user]
+    end
   end
 
-  def vote(points)
-    idea = Idea.get(params[:id])
-    idea.vote!(points)
+  private
 
-    WebSocket.send 'ideas/vote', :id => idea.id, :votes => idea.votes
-    status 200
+  def present_idea(idea)
+    { :id         => idea.id,
+      :text       => idea.text,
+      :timestamp  => idea.timestamp,
+      :votes      => idea.votes,
+      :my_vote    => idea.vote_by(current_user) }
   end
 end

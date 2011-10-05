@@ -67,9 +67,11 @@
                       idea.attr("id", "idea-" + data["id"])
                     }
 
-                    this._makeDraggable(idea)
-                    this._makeVotable(idea)
-                    this.setVotes(idea, data["votes"] || 0);
+                    this.makeDraggable(idea)
+                    this.makeVotable(idea)
+
+                    this.setVotes(idea, data["votes"])
+                    this.setMyVote(idea, data["my_vote"])
                   },
 
     addEmpty:     function(ready) {
@@ -79,7 +81,7 @@
 
                     idea.removeAttr("id")
                     idea.appendTo(this.list)
-                    this._makeEditable(idea)
+                    this.makeEditable(idea)
                     idea.slideDown(200, function() { ready(idea) })
 
                     return idea
@@ -94,22 +96,6 @@
                     var distance = idea.offset().top
                     $(document).scrollTop(distance)
                   },
-
-    startVote:    function(idea, way) {
-                    var me = this
-                    var id = this.getId(idea)
-                    if (id == undefined) return
-
-                    $.post("/ideas/" + id + "/" + way)
-                  },
-
-    finishVote:   function(id, votes) {
-                    var idea = this.find(id)
-
-                    this.setVotes(idea, votes)
-                    this.sort(idea)
-                  },
-
 
     startDelete:  function(idea) {
                     $.ajax("/ideas/" + this.getId(idea), { type: "DELETE" })
@@ -146,9 +132,51 @@
                     }
                   },
 
+    startVote:    function(idea, action) {
+                    var me = this
+                    var id = this.getId(idea)
+                    if (id == undefined) return
+
+                    $.post("/ideas/" + id + "/toggle-" + action)
+                  },
+
+    finishVote:   function(id, votes, myVote) {
+                    var idea = this.find(id)
+
+                    this.setVotes(idea, votes)
+                    this.setMyVote(idea, myVote)
+                    this.sort(idea)
+                  },
+
+
     setVotes:     function(idea, votes) {
-                    idea.attr("data-votes", votes)
-                    idea.find(".votes").text(votes)
+                    idea.find(".votes").text(votes || 0)
+                  },
+
+    setMyVote:    function(idea, myVote) {
+                    idea.removeClass("upvote downvote")
+                    if (myVote) { idea.addClass(myVote) }
+                  },
+
+    getVotes:     function(idea) {
+                    return parseInt(idea.find(".votes").text())
+                  },
+
+    makeVotable:  function(idea) {
+                    if (idea.hasClass("votable")) return
+                    idea.addClass("votable")
+
+                    var me = this
+
+                    idea.find("a.up").click(function() {
+                      me.startVote(idea, "upvote")
+                      return false
+                    })
+
+                    idea.find("a.down").click(function() {
+                      me.startVote(idea, "downvote")
+                      return false
+                    })
                   },
 
     load:         function() {
@@ -185,14 +213,14 @@
 
     sort:         function(idea) {
                     var all   = this.all()
-                    var index = this._findIndexToInsert(all, idea)
+                    var index = this.findIndexToInsert(all, idea)
 
                     all.move(idea, index)
                   },
 
     isLess:       function(a, b) {
-                    var aVotes = parseInt(a.attr("data-votes"))
-                    var bVotes = parseInt(b.attr("data-votes"))
+                    var aVotes = this.getVotes(a)
+                    var bVotes = this.getVotes(b)
 
                     if (aVotes == bVotes) {
                       var aTimestamp = parseInt(a.attr("data-timestamp"))
@@ -204,88 +232,68 @@
                     }
                   },
 
-    // privates
+    findIndexToInsert: function(all, idea) {
+                         var result = all.length
+                         var me = this
 
-    _findIndexToInsert: function(all, idea) {
-                          var result = all.length
-                          var me = this
+                         all.each(function(index) {
+                           if (me.isLess(idea, $(this))) {
+                             result = index
+                             return false
+                           }
+                           return true
+                         })
 
-                          all.each(function(index) {
-                            if (me.isLess(idea, $(this))) {
-                              result = index
-                              return false
-                            }
-                            return true
-                          })
+                         return result
+                       },
 
-                          return result
-                        },
+    makeEditable:  function(idea) {
+                     var me = this
 
-    _makeEditable:  function(idea) {
-                      var me = this
+                     var send = function(id, value) {
+                       $.ajax("/ideas/" + id, {
+                         type:     "PUT",
+                         data:     {value: value},
+                         complete: function() { newIdeaButton.enable() }
+                       })
+                     }
 
-                      var send = function(id, value) {
-                        $.ajax("/ideas/" + id, {
-                          type:     "PUT",
-                          data:     {value: value},
-                          complete: function() { newIdeaButton.enable() }
-                        })
-                      }
+                     var callback = function(value, settings) {
+                       if (me.isNew(idea)) {
+                         $.post("/ideas/next-id", function(data) {
+                           idea.attr("id", "idea-" + data["id"])
+                           send(data["id"], value)
+                         })
+                       } else {
+                         send(me.getId(idea), value)
+                       }
 
-                      var callback = function(value, settings) {
-                        if (me.isNew(idea)) {
-                          $.post("/ideas/next-id", function(data) {
-                            idea.attr("id", "idea-" + data["id"])
-                            send(data["id"], value)
-                          })
-                        } else {
-                          send(me.getId(idea), value)
-                        }
+                       return value
+                     }
 
-                        return value
-                      }
+                     idea.find(".text").editable(callback, {
+                       cancel:   "Cancel",
+                       submit:   "Save",
+                       tooltip:  "Click to edit.",
+                       type:     "textarea",
 
-                      idea.find(".text").editable(callback, {
-                        cancel:   "Cancel",
-                        submit:   "Save",
-                        tooltip:  "Click to edit.",
-                        type:     "textarea",
+                       onreset:  function() {
+                                   if (me.isNew(idea)) {
+                                     me.remove(idea, "slide")
+                                     newIdeaButton.enable()
+                                   }
+                                 }
+                     })
+                   },
 
-                        onreset:  function() {
-                                    if (me.isNew(idea)) {
-                                      me.remove(idea, "slide")
-                                      newIdeaButton.enable()
-                                    }
-                                  }
-                      })
-                    },
-
-    _makeDraggable: function(idea) {
-                      idea.draggable({
-                        opacity:  0.5,
-                        revert:   "invalid",
-                        scroll:   false,
-                        handle:   ".handle"
-                      })
-                    },
-
-    _makeVotable:   function(idea) {
-                      if (idea.hasClass("votable")) return
-                      idea.addClass("votable")
-
-                      var me = this
-
-                      idea.find("a.up").click(function() {
-                        me.startVote(idea, "up")
-                        return false
-                      })
-
-                      idea.find("a.down").click(function() {
-                        me.startVote(idea, "down")
-                        return false
-                      })
-                    }
-
+    makeDraggable: function(idea) {
+                     idea.draggable({
+                       opacity:  0.5,
+                       revert:   "invalid",
+                       scroll:   false,
+                       handle:   ".handle"
+                     })
+                   }
   }
 
   // Trash ----------------------------------------------------------------------------
@@ -359,7 +367,7 @@
           ideas.finishDelete(payload["id"], "shrink")
           break
         case 'ideas/vote':
-          ideas.finishVote(payload["id"], payload["votes"])
+          ideas.finishVote(payload["id"], payload["votes"], payload["my_vote"])
           break
       }
     }

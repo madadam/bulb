@@ -2,10 +2,7 @@
 # Include this module into your class to make it redis-persistable.
 #
 module Persistent
-  def self.redis
-    @redis ||= Redis.new(:host => CONFIG[:redis_host],
-                         :port => CONFIG[:redis_port])
-  end
+  REDIS = Redis.new(:host => CONFIG[:redis_host], :port => CONFIG[:redis_port])
 
   def self.included(base)
     base.class_eval do
@@ -15,23 +12,19 @@ module Persistent
     end
   end
 
-  def redis
-    Persistent.redis
-  end
-
   def read_scalar(name)
-    redis.get attribute_key(name)
+    REDIS.get attribute_key(name)
   end
 
   def write_scalar(name, value)
-    redis.set attribute_key(name), value
+    REDIS.set attribute_key(name), value
 
     index = self.class.indices[name]
     index && index.add(value, self)
   end
 
   def increment!(name, amount = 1)
-    redis.incrby attribute_key(name), amount
+    REDIS.incrby attribute_key(name), amount
   end
 
   def ==(other)
@@ -47,7 +40,7 @@ module Persistent
   private
 
   def delete_id
-    redis.srem(self.class.key, id)
+    REDIS.srem(self.class.key, id)
   end
 
   def delete_from_indices
@@ -55,7 +48,7 @@ module Persistent
   end
 
   def delete_attributes
-    redis.del *self.class.attributes.map { |a| attribute_key(a) }
+    REDIS.del *self.class.attributes.map { |a| attribute_key(a) }
   end
 
   def attribute_key(name)
@@ -67,13 +60,9 @@ module Persistent
   end
 
   module ClassMethods
-    def redis
-      Persistent.redis
-    end
-
     def create(attributes = {})
       new(attributes[:id] || next_id!).tap do |record|
-        redis.sadd(key, record.id)
+        REDIS.sadd(key, record.id)
 
         attributes.each do |name, value|
           record.send("#{name}=", value)
@@ -82,7 +71,7 @@ module Persistent
     end
 
     def get(id)
-      redis.sismember(key, id) ? new(id) : nil
+      REDIS.sismember(key, id) ? new(id) : nil
     end
 
     def get_or_create(id)
@@ -90,7 +79,7 @@ module Persistent
     end
 
     def all
-      redis.smembers(key).map { |id| new(id) }
+      REDIS.smembers(key).map { |id| new(id) }
     end
 
     def delete(id)
@@ -98,7 +87,7 @@ module Persistent
     end
 
     def next_id!
-      redis.incr("#{key}/last-id")
+      REDIS.incr("#{key}/last-id")
     end
 
     def key
@@ -108,7 +97,7 @@ module Persistent
 
     def attributes
       # FIXME: this won't work with inheritance.
-      @attributes ||= Set.new
+      @attributes ||= ::Set.new
     end
 
     def string(name)
@@ -141,6 +130,20 @@ module Persistent
       attributes << name
     end
 
+    def set(name)
+      define_method(name) do
+        var = "@#{name}"
+        set = instance_variable_get(var)
+
+        unless set
+          set = Set.new(attribute_key(name))
+          instance_variable_set(var, set)
+        end
+
+        set
+      end
+    end
+
     def indices
       # FIXME: this won't work with inheritance.
       @indices ||= {}
@@ -160,27 +163,49 @@ module Persistent
     end
   end
 
-  class Index
-    def redis
-      Persistent.redis
+  class Set
+    def initialize(key)
+      @key = key
     end
 
+    def << (item)
+      REDIS.sadd(@key, item)
+    end
+
+    alias_method :add, :<<
+
+    def delete(item)
+      REDIS.srem(@key, item)
+    end
+
+    def include?(item)
+      REDIS.sismember(@key, item)
+    end
+
+    def size
+      REDIS.scard(@key)
+    end
+
+    alias_method :length, :size
+  end
+
+  class Index
     def initialize(type, name)
       @type = type
       @name = name
     end
 
     def get(value)
-      id = redis.hget(key, value)
+      id = REDIS.hget(key, value)
       id && @type.new(id)
     end
 
     def add(value, record)
-      redis.hset(key, value, record.id) if value
+      REDIS.hset(key, value, record.id) if value
     end
 
     def remove(record)
-      redis.hdel key, record.send(@name)
+      REDIS.hdel key, record.send(@name)
     end
 
     def key

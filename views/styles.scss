@@ -186,7 +186,7 @@ body {
   > ol#ideas {
     clear: both;
     list-style-type: none;
-    padding: 10px 20px;
+    padding: 10px 10px;
     margin: 0;
 
     li {
@@ -206,7 +206,7 @@ body {
         border: solid 1px rgb(220, 220, 220);
         background: rgba(255, 255, 255, 0.4);
         padding: 0;
-        margin: 0 32px 0 2px;
+        margin: 0 32px 0 24px;
         height: 44px;
         cursor: text;
 
@@ -258,15 +258,15 @@ body {
     li.votable {
       a.up, a.down, span.votes {
         position: absolute;
-        display: none;
+        display: block;
       }
 
       a.up, a.down {
         background-repeat: no-repeat;
-        opacity: 0.8;
-        width: 40px;
-        height: 40px;
-        left: -26px;
+        opacity: 0.5;
+        width: 14px;
+        height: 16px;
+        left: 6px;
         overflow: hidden;
         text-indent: 100px;
         cursor: default;
@@ -276,9 +276,9 @@ body {
 
       a.up {
         background-image: url(/up.png);
-        top: -6px;
+        top: 2px;
 
-        &:active { top: -5px; }
+        &:active { top: 3px; }
       }
 
       a.down {
@@ -290,19 +290,23 @@ body {
 
       span.votes {
         @include round-corners(3px);
-        background: rgba(0, 0, 0, 0.3);
+        background: rgba(0, 0, 0, 0.1);
         font-size: 10px;
-        color: white;
-        left: -26px;
-        top: 18px;
-        padding: 2px;
-        min-width: 19px;
+        color: rgb(50, 50, 50);
+        left: 2px;
+        top: 20px;
+        padding: 1px 2px;
+        min-width: 18px;
         text-align: right;
       }
     }
 
-    li.votable:hover {
-      a.up, a.down, span.votes { display: block; }
+    li.upvote { 
+      a.up { background-image: url(/up-active.png); } 
+    }
+
+    li.downvote { 
+      a.down { background-image: url(/down-active.png); }
     }
   }
 

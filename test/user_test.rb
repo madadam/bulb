@@ -20,4 +20,9 @@ class UserTest < Test::Unit::TestCase
 
     assert_nil User.authenticate('alice@example.com', 'invalid')
   end
+
+  test 'User#name return the part of the email before the at-sign' do
+    assert_equal 'alice', User.create(:email => 'alice@example.com').name
+    assert_equal 'bob',   User.create(:email => 'bob@example.com').name
+  end
 end

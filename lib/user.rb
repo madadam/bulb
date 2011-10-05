@@ -17,4 +17,8 @@ class User
   def authenticated?(password)
     password == self.password
   end
+
+  def name
+    email.gsub(/@.*$/, '')
+  end
 end

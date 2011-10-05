@@ -43,8 +43,12 @@ class IdeaTest < Test::Unit::TestCase
     idea2 = Idea.create(:text => 'bar')
     idea3 = Idea.create(:text => 'baz')
 
-    idea2.vote!(1)
-    idea3.vote!(2)
+    user1 = User.create
+    user2 = User.create
+
+    idea2.upvote!(user1)
+    idea3.upvote!(user1)
+    idea3.upvote!(user2)
 
     ideas = Idea.all
 
@@ -53,69 +57,202 @@ class IdeaTest < Test::Unit::TestCase
     assert_equal 'foo', ideas[2].text
   end
 
-  test 'Idea#to_json' do
-    idea = Idea.create(:text => 'take over the world')
-
-    expected = {'id'        => 1,
-                'timestamp' => idea.timestamp,
-                'text'      => 'take over the world',
-                'votes'     => 0}
-
-    assert_equal expected, JSON.parse(idea.to_json)
-  end
-
   test 'ideas are created with zero votes' do
     idea = Idea.create(:text => 'foo')
     assert_equal 0, idea.votes
   end
 
-  test 'Idea#vote!' do
+  test 'Idea#upvote! adds one vote and marks the idea as upvoted by the given user' do
     idea = Idea.create(:text => 'foo')
+    user = User.create
 
-    idea.vote!(1)
+    idea.upvote!(user)
+
     assert_equal 1, idea.votes
-
-    idea.vote!(-1)
-    assert_equal 0, idea.votes
+    assert idea.upvoted_by?(user)
   end
 
-  test 'Idea#vote! with negative number does nothing if there are zero votes' do
+  test 'Idea#upvote! does nothing if it is already upvoted by the given user' do
     idea = Idea.create(:text => 'foo')
-    idea.vote!(-1)
+    user = User.create
 
-    assert_equal 0, idea.votes
+    idea.upvote!(user)
+    idea.upvote!(user)
+
+    assert_equal 1, idea.votes
   end
 
-  test 'votes are preserved' do
+  test 'Idea#upvote! removes the downvote of a previously downvoted idea' do
     idea = Idea.create(:text => 'foo')
-    idea.vote!(3)
+    user = User.create
 
-    idea = Idea.get(idea.id)
-    assert_equal 3, idea.votes
+    idea.downvote!(user)
+    idea.upvote!(user)
+
+    assert_equal 1, idea.votes
+    assert !idea.downvoted_by?(user)
+    assert  idea.upvoted_by?(user)
   end
 
-  test 'simultaneous votes do not overwrite each other' do
+  test 'Idea#downvote! removes one vote and marks the idea as downvoted by the given user' do
     idea = Idea.create(:text => 'foo')
-    idea1 = Idea.get(idea.id)
-    idea2 = Idea.get(idea.id)
+    user = User.create
 
-    idea1.vote!(1)
-    idea2.vote!(1)
+    idea.downvote!(user)
 
-    idea = Idea.get(idea.id)
+    assert_equal -1, idea.votes
+    assert idea.downvoted_by?(user)
+  end
+
+  test 'Idea#downvote! does nothing if it is already downvoted by the given user' do
+    idea = Idea.create(:text => 'foo')
+    user = User.create
+
+    idea.downvote!(user)
+    idea.downvote!(user)
+
+    assert_equal -1, idea.votes
+  end
+
+  test 'Idea#downvote! removes the upvote of a previously upvoted idea' do
+    idea = Idea.create(:text => 'foo')
+    user = User.create
+
+    idea.upvote!(user)
+    idea.downvote!(user)
+
+    assert_equal -1, idea.votes
+    assert  idea.downvoted_by?(user)
+    assert !idea.upvoted_by?(user)
+  end
+
+  test 'Idea#unvote! removes upvote' do
+    idea = Idea.create(:text => 'foo')
+    user = User.create
+
+    idea.upvote!(user)
+    idea.unvote!(user)
+
+    assert !idea.upvoted_by?(user)
+  end
+
+  test 'Idea#unvote! removes downvote' do
+    idea = Idea.create(:text => 'foo')
+    user = User.create
+
+    idea.downvote!(user)
+    idea.unvote!(user)
+
+    assert !idea.downvoted_by?(user)
+  end
+
+  test 'Idea#votes returns total number of votes' do
+    idea = Idea.create(:text => 'foo')
+    user1 = User.create
+    user2 = User.create
+
+    idea.upvote!(user1)
+    idea.upvote!(user2)
     assert_equal 2, idea.votes
+
+    idea.downvote!(user1)
+    assert_equal 0, idea.votes
+
+    idea.downvote!(user2)
+    assert_equal -2, idea.votes
+  end
+
+  test 'Idea#toggle_upvote! upvotes if not already upvoted' do
+    idea = Idea.create(:text => 'foo')
+    user = User.create
+
+    idea.toggle_upvote!(user)
+    assert idea.upvoted_by?(user)
+  end
+
+  test 'Idea#toggle_upvote! removes the upvote if already upvoted' do
+    idea = Idea.create(:text => 'foo')
+    user = User.create
+
+    idea.upvote!(user)
+
+    idea.toggle_upvote!(user)
+    assert !idea.upvoted_by?(user)
+  end
+
+  test 'Idea#toggle_upvote! upvotes if downvoted' do
+    idea = Idea.create(:text => 'foo')
+    user = User.create
+
+    idea.downvote!(user)
+
+    idea.toggle_upvote!(user)
+    assert idea.upvoted_by?(user)
+  end
+
+  test 'Idea#toggle_downvote! downvotes if not already downvoted' do
+    idea = Idea.create(:text => 'foo')
+    user = User.create
+
+    idea.toggle_downvote!(user)
+    assert idea.downvoted_by?(user)
+  end
+
+  test 'Idea#toggle_downvote! removes the downvote if already downvoted' do
+    idea = Idea.create(:text => 'foo')
+    user = User.create
+
+    idea.downvote!(user)
+
+    idea.toggle_downvote!(user)
+    assert !idea.downvoted_by?(user)
+  end
+
+  test 'Idea#toggle_downvote! downvotes if upvoted' do
+    idea = Idea.create(:text => 'foo')
+    user = User.create
+
+    idea.upvote!(user)
+
+    idea.toggle_downvote!(user)
+    assert idea.downvoted_by?(user)
+  end
+
+  test 'Idea#vote_by returns :upvote if the idea was upvoted by the given user' do
+    idea = Idea.create(:text => 'foo')
+    user = User.create
+
+    idea.upvote!(user)
+    assert_equal :upvote, idea.vote_by(user)
+  end
+
+  test 'Idea#vote_by returns :downvote if the idea was downvoted by the given user' do
+    idea = Idea.create(:text => 'foo')
+    user = User.create
+
+    idea.downvote!(user)
+    assert_equal :downvote, idea.vote_by(user)
+  end
+
+  test 'Idea#vote_by returns nil if the idea was not voted by the given user' do
+    idea = Idea.create(:text => 'foo')
+    user = User.create
+
+    assert_nil idea.vote_by(user)
   end
 
   test 'older idea is before a younger one if they have the same votes' do
     idea1 = Idea.create(:text => 'foo')
     idea2 = Idea.create(:text => 'bar')
 
+    user = User.create
+
     idea1.timestamp = Time.local(2011, 9, 27, 22, 10, 11)
     idea2.timestamp = Time.local(2011, 9, 27, 22, 10, 21)
     assert idea1 < idea2
 
-    idea1.vote!(4)
-    idea2.vote!(4)
+    idea1.upvote!(user)
+    idea2.upvote!(user)
     assert idea1 < idea2
   end
 
@@ -123,8 +260,12 @@ class IdeaTest < Test::Unit::TestCase
     idea1 = Idea.create(:text => 'foo')
     idea2 = Idea.create(:text => 'bar')
 
-    idea1.vote!(2)
-    idea2.vote!(3)
+    user1 = User.create
+    user2 = User.create
+
+    idea1.upvote!(user1)
+    idea2.upvote!(user1)
+    idea2.upvote!(user2)
     assert idea2 < idea1
   end
 end
